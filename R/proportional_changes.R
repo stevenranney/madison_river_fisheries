@@ -38,11 +38,3 @@ prop %>%
         # panel.grid.minor = element_blank())
 
 
-# scale_fill_discrete(
-#   "Transmission",
-#   breaks = c(0, 1),
-#   labels = c("Automatic", expression(italic("Manual")))
-
-# theme(axis.text.x = element_text(size = 14), axis.title.x = element_text(size = 16),
-#       axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16),
-#       plot.title = element_text(size = 20, face = "bold", color = "darkgreen"))
