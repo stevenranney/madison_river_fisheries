@@ -1,4 +1,9 @@
-
+###########
+# TAKEAWAYS
+#1. Brown trout < 155mm (i.e., "substock") have been decreasing since 2003. 
+# The B0 and B1 terms for a linear model describing brown trout < 155m at Varney and Pine Butte 
+# are significant and the slope is negative though the R^2 values for both aren't very high (.7 for Varney, 
+# -0.5 for Pine Butte)
 
 library(quantreg) 
 library(ggplot2) #plotting
@@ -12,21 +17,20 @@ length_cats = c(200, 330, 460, 590, 720)
 # For repeatability
 set.seed(256)
 
-# Data handling. Read in the reference and state "independent" datasets, manipulate, 
-# and combine
-varney <- 
-  read.csv('./data/raw/Varney20032022_fish.csv', header = T, skip = 8) %>%
-  mutate(#Year = as.factor(Year),
-         species = ifelse(Species == 'LL', "Brown", 
-                          ifelse(Species == 'RB', "Rainbow", Species))
-  )
+all <- readRDS('./data/upper_madison.rds')
 
 sub_stock <- 
-  varney %>% 
-  filter(species %in% c("Brown", "Rainbow")) %>%
-  filter(Length > 0 & Weight > 0) %>% 
+  all %>% 
+  filter(
+    species %in% c("Brown", "Rainbow"), 
+    Length > 0 & Weight > 0) %>% 
   mutate(sub_stock = ifelse(Length < 155, 1, 0)) %>% 
-  group_by(species, Year, sub_stock) %>% 
+  group_by(
+    location,
+    species, 
+    Year, 
+    sub_stock
+    ) %>% 
   summarise(n = n()) 
 
 b <-
@@ -56,15 +60,28 @@ b %>%
 rec <- 
   sub_stock %>%
   filter(sub_stock == TRUE) %>%
-  group_by(species) %>%
+  group_by(location, species) %>%
   do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
 
 sub_stock %>%
-  filter(sub_stock == FALSE) %>%
+  filter(sub_stock == TRUE) %>%
   ggplot() + 
   aes(x = Year, y = n, colour = species) + 
   geom_point() + 
   geom_smooth(
     method = 'lm', 
-    # aes(colour = 'Linear model')
-  )
+    se = FALSE
+  ) + 
+  facet_wrap(~location)
+
+locations <- c('Varney', 'Pine Butte')
+
+#Brown
+for (l in 1:length(locations)){
+  print(summary((rec %>% filter(species == 'Brown' & location == locations[l]) %>% pull(mod))[[1]]))
+}
+
+# Rainbow
+for (l in 1:length(locations)){
+  print(summary((rec %>% filter(species == 'Rainbow' & location == locations[l]) %>% pull(mod))[[1]]))
+}
