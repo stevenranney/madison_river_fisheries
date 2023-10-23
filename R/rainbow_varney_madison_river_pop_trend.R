@@ -14,7 +14,7 @@ set.seed(256)
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
 varney <- 
-  read.csv('/Users/sranney/desktop/Varney20032022_fish.csv', header = T, skip = 8) %>%
+  read.csv('./data/raw/Varney20032022_fish.csv', header = T, skip = 8) %>%
   mutate(Year = as.factor(Year),
          species = ifelse(Species == 'LL', "Brown", 
                           ifelse(Species == 'RB', "Rainbow", Species))
@@ -26,17 +26,18 @@ varney %>%
   geom_point(alpha = 0.25) + 
   facet_wrap(~species)
 
-varney_ref <-
-  varney %>%
-  filter(Year == "2003")
-
+# varney_ref <-
+#   varney %>%
+#   filter(Year == "2003")
+# 
 #################################################################################
+# Rainbow TROUT
 # Table of quantiles and predictions of weight-at-length
 
 # Five quantiles at once with their predictions by 10mm increments
 varney_brown_ref_10to90 <-
   varney_ref %>%
-  filter(species == 'Brown', 
+  filter(species == 'Rainbow', 
          Length > 0 & Weight > 0) %>%
   rq(log10(Weight)~log10(Length), data = ., tau = c(0.10, 0.25, 0.50, 0.75, 0.90))
 
@@ -55,14 +56,14 @@ predict_by_10mm <-
   # comma() %>% #Add comma
   cbind(by10mm) %>%
   rename(`Total length (mm)` = Length,
-        `0.10` = "tau..0.10",
-        `0.25` = "tau..0.25",
-        `0.50` = "tau..0.50",
-        `0.75` = "tau..0.75",
-        `0.90` = "tau..0.90")
+         `0.10` = "tau..0.10",
+         `0.25` = "tau..0.25",
+         `0.50` = "tau..0.50",
+         `0.75` = "tau..0.75",
+         `0.90` = "tau..0.90")
 
 predict_by_10mm %>%
-  write.csv(paste0("output/", Sys.Date(), "_predicted_values.csv"),
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_predicted_values.csv"),
             row.names = FALSE)
 
 #-----------------------------------------------------------------------------
@@ -72,8 +73,9 @@ predict_by_10mm %>%
 
 varney <-
   varney %>%
-  filter(Length > 0 & Weight > 0)# %>%
-  # filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
+  filter(species == 'Rainbow') %>%
+  filter(Length > 0 & Weight > 0) %>%
+  filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
 
 # Make the ref data the base level in this estimate of 0.75 quantile.
 varney <-
@@ -107,7 +109,7 @@ varney_75_diff <-
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
 varney_75_diff %>%
-  write.csv(paste0("output/", Sys.Date(), "_differences_in_slope_int.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_differences_in_slope_int.csv"), 
             row.names = FALSE)
 
 # Retrieve slope and intercept for each population
@@ -139,7 +141,7 @@ varney_75_slope_int_est <-
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
 varney_75_slope_int_est %>%
-  write.csv(paste0("output/", Sys.Date(), "_slope_int_estimates.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_slope_int_estimates.csv"), 
             row.names = FALSE)
 
 
@@ -189,15 +191,15 @@ predicted_output <-
   rename(Year = `var_new$Year`, 
          Length = `var_new$Length`) %>%
   mutate(
-  # year = ifelse(state == "GA2", "GA1", 
-  #                       ifelse(state == "GA3", "GA2", 
-  #                              ifelse(state == "GA4", "GA3", 
-  #                                     ifelse(state == "SD4", "SD1", 
-  #                                            ifelse(state == "SD13", "SD2", 
-  #                                                   ifelse(state == "SD25", "SD3", "Reference")))))), 
-         Year = Year %>% as.factor(), 
-         Year = Year %>% relevel(ref = "2003"))
+    # year = ifelse(state == "GA2", "GA1", 
+    #                       ifelse(state == "GA3", "GA2", 
+    #                              ifelse(state == "GA4", "GA3", 
+    #                                     ifelse(state == "SD4", "SD1", 
+    #                                            ifelse(state == "SD13", "SD2", 
+    #                                                   ifelse(state == "SD25", "SD3", "Reference")))))), 
+    Year = Year %>% as.factor(), 
+    Year = Year %>% relevel(ref = "2003"))
 
 predicted_output %>%
-  saveRDS(paste0("data/", Sys.Date(), "_predicted_weight_at_length.rds"))
+  saveRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
 

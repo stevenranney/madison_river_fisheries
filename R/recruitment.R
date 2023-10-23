@@ -1,0 +1,70 @@
+
+
+library(quantreg) 
+library(ggplot2) #plotting
+library(dplyr) #code orgnization
+library(scales)
+
+# source("R/helper_functions.R")
+
+length_cats = c(200, 330, 460, 590, 720)
+
+# For repeatability
+set.seed(256)
+
+# Data handling. Read in the reference and state "independent" datasets, manipulate, 
+# and combine
+varney <- 
+  read.csv('./data/raw/Varney20032022_fish.csv', header = T, skip = 8) %>%
+  mutate(#Year = as.factor(Year),
+         species = ifelse(Species == 'LL', "Brown", 
+                          ifelse(Species == 'RB', "Rainbow", Species))
+  )
+
+sub_stock <- 
+  varney %>% 
+  filter(species %in% c("Brown", "Rainbow")) %>%
+  filter(Length > 0 & Weight > 0) %>% 
+  mutate(sub_stock = ifelse(Length < 155, 1, 0)) %>% 
+  group_by(species, Year, sub_stock) %>% 
+  summarise(n = n()) 
+
+b <-
+  sub_stock %>% 
+  filter(sub_stock == TRUE) %>% 
+  filter(species == "Brown")
+
+nls_mod <- nls(formula = n~Year^a, data = b, start = c(a = 0.5), trace = TRUE)
+lm_mod <- lm(n~Year, data = b)
+
+b %>%
+  ggplot() + 
+  aes(x = Year, y = n, colour = species) + 
+  geom_point() + 
+  geom_smooth(
+    method = 'nls', 
+    formula = y ~ x^a, 
+    aes(colour = 'Negative Exponential'),
+    se = FALSE, 
+    method.args = list(start=c(a = -0.1), trace = TRUE)) + 
+  geom_smooth(
+    method = 'lm', 
+    aes(colour = 'Linear model')
+    )
+
+
+rec <- 
+  sub_stock %>%
+  filter(sub_stock == TRUE) %>%
+  group_by(species) %>%
+  do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
+
+sub_stock %>%
+  filter(sub_stock == FALSE) %>%
+  ggplot() + 
+  aes(x = Year, y = n, colour = species) + 
+  geom_point() + 
+  geom_smooth(
+    method = 'lm', 
+    # aes(colour = 'Linear model')
+  )
