@@ -19,7 +19,6 @@ summer
 new_angler_days = angler_days+(angler_days*.014*c(.1, .2, .5))
 new_angler_days[3]
 
-
 #multiple simulations = 100 days? - season == 90 days, 
 # Single season long
 #11 hour day length (horton 2017, pg 24)

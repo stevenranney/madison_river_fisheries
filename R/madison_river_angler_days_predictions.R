@@ -2,6 +2,7 @@
 library(dplyr)
 library(ggplot2)
 library(mgcv)
+library(scales)
 
 # From 2020 survey: totals and summer
 # .58 is proportion of users who use "upper" river
@@ -41,10 +42,25 @@ all %>%
          upper_madison_summer = upper_madison*.75)
 
 all %>%
+  filter(year <= 2030) %>%
   ggplot() +
-  aes(x = year, y = fit, colour = type) +
-  geom_line() +
-  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3)
+  aes(x = year, y = fit) +
+  geom_point((aes(x = year, y = angler_days))) +
+  geom_line(aes(linetype = type)) +
+  geom_ribbon(aes(ymin = lwr, ymax = upr, ribbontype = type), alpha = 0.3) +
+  xlab("Year") +
+  ylab('N anglers/day\n(upper Madison River only)') +
+  scale_linetype_discrete(name = "",
+                          labels = c(expression(italic('Observed')),
+                                     expression(italic('Estimated')))
+  ) +
+  # scale_y_continuous(label = comma()) +
+  # labs(shape = "Species", linetype = 'Species') +
+  theme_minimal(base_size = 20) +
+  theme(legend.position = 'bottom',
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))#,
+
 
 # # create and summarise model
 # cars.model <- lm(dist ~ speed, data = cars)
