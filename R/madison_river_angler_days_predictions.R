@@ -39,21 +39,22 @@ all <-
   rbind(predicted)
 
 all %>%
-  mutate(upper_madison = fit*.58, 
-         upper_madison_summer = upper_madison*.75)
+  saveRDS("./data/predicted_angler_pressure.rds")
 
+
+#Plot the observed/expted angler data
 all %>%
   filter(year <= 2030) %>%
   ggplot() +
   aes(x = year, y = fit) +
   geom_point((aes(x = year, y = angler_days))) +
-  geom_line(aes(linetype = type)) +
+  geom_line(aes(linetype = type), size = 1) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3) +
   xlab("Year") +
-  ylab('N anglers/day\n(upper Madison River only)') +
+  ylab('N anglers/year\n(upper Madison River)') +
   scale_linetype_discrete(name = "",
                           labels = c(expression(italic('Observed')),
-                                     expression(italic('Estimated')))
+                                     expression(italic('Predicted')))
   ) +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom',
