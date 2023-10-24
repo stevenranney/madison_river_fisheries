@@ -6,7 +6,7 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-# length_cats = c(200, 330, 460, 590, 720)
+length_cats = c(200, 330, 460, 590, 720)
 
 # For repeatability
 set.seed(256)
@@ -14,16 +14,18 @@ set.seed(256)
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
 all <- readRDS('./data/upper_madison.rds') %>%
+  filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   mutate(Year = as.factor(Year))
 
+
 #################################################################################
-# BROWN TROUT
+# Rainbow TROUT
 # Table of quantiles and predictions of weight-at-length
 
 # Five quantiles at once with their predictions by 10mm increments
-brown_ref_10to90 <-
+rainbow_ref_10to90 <-
   all %>%
-  filter(species == 'Brown', 
+  filter(species == 'Rainbow', 
          Length > 0 & Weight > 0) %>%
   rq(log10(Weight)~log10(Length), data = ., tau = c(0.10, 0.25, 0.50, 0.75, 0.90))
 
@@ -31,7 +33,7 @@ by10mm <-
   data.frame(Length = seq(50, 720, by = 10))
 
 predict_by_10mm <- 
-  predict(brown_ref_10to90, newdata = by10mm, confidence = none)
+  predict(rainbow_ref_10to90, newdata = by10mm, confidence = none)
 
 # Create, as much as possible, the prediction table in R so not as much 
 # Excel or Word formatting needs to be done.
@@ -49,7 +51,7 @@ predict_by_10mm <-
          `0.90` = "tau..0.90")
 
 predict_by_10mm %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_predicted_values.csv"),
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_predicted_values.csv"),
             row.names = FALSE)
 
 #-----------------------------------------------------------------------------
@@ -59,9 +61,8 @@ predict_by_10mm %>%
 
 all <-
   all %>%
-  filter(species == 'Brown') %>%
-  filter(Length > 0 & Weight > 0)# %>%
-  # filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
+  filter(species == 'Rainbow') %>%
+  filter(Length > 0 & Weight > 0)
 
 # Make the ref data the base level in this estimate of 0.75 quantile.
 all <-
@@ -73,7 +74,7 @@ all_75 <-
   rq(log10(Weight)~log10(Length) + Year + log10(Length):Year, data = .,
      contrasts = list(Year="contr.treatment"), tau = 0.75)
 
-all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 5000, mofn = 5000)
+all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 1000, mofn = 5000)
 
 all_75_diff <- 
   data.frame(all_75_diff$coef) %>%
@@ -95,7 +96,7 @@ all_75_diff <-
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
 all_75_diff %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_differences_in_slope_int.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_differences_in_slope_int.csv"), 
             row.names = FALSE)
 
 # Retrieve slope and intercept for each population
@@ -127,8 +128,9 @@ all_75_slope_int_est <-
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
 all_75_slope_int_est %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_slope_int_estimates.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_slope_int_estimates.csv"), 
             row.names = FALSE)
+
 
 
 #-----------------------------------------------------------------------------

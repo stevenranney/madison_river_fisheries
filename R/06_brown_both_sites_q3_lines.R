@@ -6,38 +6,27 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-length_cats = c(200, 330, 460, 590, 720)
+# length_cats = c(200, 330, 460, 590, 720)
 
 # For repeatability
 set.seed(256)
 
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
-varney <- 
-  read.csv('./data/raw/Varney20032022_fish.csv', header = T, skip = 8) %>%
-  mutate(Year = as.factor(Year),
-         species = ifelse(Species == 'LL', "Brown", 
-                          ifelse(Species == 'RB', "Rainbow", Species))
-  )
+all <- readRDS('./data/upper_madison.rds') %>%
+  filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
+  mutate(Year = as.factor(Year))
 
-varney %>%
-  filter(Length > 0 && Weight > 0) %>%
-  ggplot(aes(x = log10(Length), y = log10(Weight))) +
-  geom_point(alpha = 0.25) + 
-  facet_wrap(~species)
 
-# varney_ref <-
-#   varney %>%
-#   filter(Year == "2003")
-# 
+
 #################################################################################
-# Rainbow TROUT
+# BROWN TROUT
 # Table of quantiles and predictions of weight-at-length
 
 # Five quantiles at once with their predictions by 10mm increments
-varney_brown_ref_10to90 <-
-  varney_ref %>%
-  filter(species == 'Rainbow', 
+brown_ref_10to90 <-
+  all %>%
+  filter(species == 'Brown', 
          Length > 0 & Weight > 0) %>%
   rq(log10(Weight)~log10(Length), data = ., tau = c(0.10, 0.25, 0.50, 0.75, 0.90))
 
@@ -45,7 +34,7 @@ by10mm <-
   data.frame(Length = seq(50, 720, by = 10))
 
 predict_by_10mm <- 
-  predict(varney_brown_ref_10to90, newdata = by10mm, confidence = none)
+  predict(brown_ref_10to90, newdata = by10mm, confidence = none)
 
 # Create, as much as possible, the prediction table in R so not as much 
 # Excel or Word formatting needs to be done.
@@ -63,7 +52,7 @@ predict_by_10mm <-
          `0.90` = "tau..0.90")
 
 predict_by_10mm %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_predicted_values.csv"),
+  write.csv(paste0("output/", Sys.Date(), "_brown_predicted_values.csv"),
             row.names = FALSE)
 
 #-----------------------------------------------------------------------------
@@ -71,26 +60,25 @@ predict_by_10mm %>%
 # se="xy",R=1000, mofn=5000 is bootstrap of xy-pairs 5000 of n samples 
 # made 1000 times.
 
-varney <-
-  varney %>%
-  filter(species == 'Rainbow') %>%
-  filter(Length > 0 & Weight > 0) %>%
-  filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
+all <-
+  all %>%
+  filter(species == 'Brown') %>%
+  filter(Length > 0 & Weight > 0)
 
 # Make the ref data the base level in this estimate of 0.75 quantile.
-varney <-
-  varney %>%
+all <-
+  all %>%
   mutate(Year = Year %>% relevel(ref = "2003"))
 
-varney_75 <- 
-  varney %>% 
+all_75 <- 
+  all %>% 
   rq(log10(Weight)~log10(Length) + Year + log10(Length):Year, data = .,
      contrasts = list(Year="contr.treatment"), tau = 0.75)
 
-varney_75_diff <- summary(varney_75, se = "boot", bsmethod = "xy", R = 5000, mofn = 3000)
+all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 1000, mofn = 5000)
 
-varney_75_diff <- 
-  data.frame(varney_75_diff$coef) %>%
+all_75_diff <- 
+  data.frame(all_75_diff$coef) %>%
   mutate(name = row.names(.)) %>%
   select(name, Value, Std..Error, t.value, Pr...t..) %>%
   rename(Estimate = Value, 
@@ -100,30 +88,30 @@ varney_75_diff <-
 
 # Calculate 95% confidence intervals around the estimate of the differences in 
 # slope/int among populationsusing bootstrap estimates of SE.
-resid_df <- nrow(varney_75$x) - ncol(varney_75$x)
+resid_df <- nrow(all_75$x) - ncol(all_75$x)
 
-varney_75_diff <- 
-  varney_75_diff %>%
+all_75_diff <- 
+  all_75_diff %>%
   mutate(Lwr95CI = Estimate + SE * qt(0.025,resid_df), 
          Upr95CI = Estimate + SE * qt(0.975,resid_df)) %>%
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
-varney_75_diff %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_differences_in_slope_int.csv"), 
+all_75_diff %>%
+  write.csv(paste0("output/", Sys.Date(), "_brown_differences_in_slope_int.csv"), 
             row.names = FALSE)
 
 # Retrieve slope and intercept for each population
 # Same model as above but removing the intercept term so that I can find slope/int
 # estimates for each population, including ref
-varney_75_slope_int <- 
-  varney %>% 
+all_75_slope_int <- 
+  all %>% 
   rq(log10(Weight)~Year + log10(Length):Year - 1, data = ., 
      contrasts = list(Year = "contr.treatment"), tau = 0.75)
 
-varney_75_slope_int_est <- summary(varney_75_slope_int, se = "boot", bsmethod = "xy", R = 1000, mofn = 5000)
+all_75_slope_int_est <- summary(all_75_slope_int, se = "boot", bsmethod = "xy", R = 1000, mofn = 5000)
 
-varney_75_slope_int_est <- 
-  data.frame(varney_75_slope_int_est$coefficients) %>%
+all_75_slope_int_est <- 
+  data.frame(all_75_slope_int_est$coefficients) %>%
   mutate(name = row.names(.)) %>%
   select(name, Value, Std..Error, t.value, Pr...t..) %>%
   rename(`Point estimate` = Value, 
@@ -132,16 +120,16 @@ varney_75_slope_int_est <-
          `p value` = `Pr...t..`)
 
 ###Calculate 95% confidence intervals using bootstrap estimates of SE.
-resid_df <- nrow(varney_75_slope_int$x) - ncol(varney_75_slope_int$x)
+resid_df <- nrow(all_75_slope_int$x) - ncol(all_75_slope_int$x)
 
-varney_75_slope_int_est <- 
-  varney_75_slope_int_est %>%
+all_75_slope_int_est <- 
+  all_75_slope_int_est %>%
   mutate(Lwr95CI = `Point estimate` + SE * qt(0.025, resid_df), 
          Upr95CI = `Point estimate` + SE * qt(0.975, resid_df)) %>%
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
-varney_75_slope_int_est %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_slope_int_estimates.csv"), 
+all_75_slope_int_est %>%
+  write.csv(paste0("output/", Sys.Date(), "_brown_slope_int_estimates.csv"), 
             row.names = FALSE)
 
 
@@ -150,7 +138,7 @@ varney_75_slope_int_est %>%
 # weight at length at the midpoints of the Gabelhouse length categories
 
 var_new <-
-  data.frame(Year = rep(varney$Year %>% unique(), 5), 
+  data.frame(Year = rep(all$Year %>% unique(), 5), 
              Length = rep(c(100, 200+(330-200)/2, 330+(460-330)/2, 460+(590-460)/2, 590+(720-590)/2), each = 7), 
              Weight = rep(NA, 35))
 
