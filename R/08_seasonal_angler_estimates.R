@@ -10,6 +10,7 @@ season_length = summer # days
 # angler_days = 400000 * .58 # predicted in 2030
 angling_est <-
   readRDS('./data/predicted_angler_pressure.rds')
+
 angler_days <- angling_est %>% filter(year == 2023) %>% pull(fit) # estiamted from predicted_angler_pressure.rds
 summer_prop <-.67 # proportion of all madison pressure that happens in summer, 2020 fishing pressure survey, 
 # Montana statewide angling pressure 2020, League and Caball

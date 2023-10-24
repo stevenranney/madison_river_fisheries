@@ -94,6 +94,7 @@ all_75_diff <-
   all_75_diff %>%
   mutate(Lwr95CI = Estimate + SE * qt(0.025,resid_df), 
          Upr95CI = Estimate + SE * qt(0.975,resid_df)) %>%
+  mutate_if(is.numeric, round, 4) %>%
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
 all_75_diff %>%

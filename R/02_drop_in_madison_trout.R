@@ -10,15 +10,36 @@ library(scales)
 # For repeatability
 set.seed(256)
 
-all <- readRDS('./data/upper_madison.rds')
+all <- readRDS('./data/upper_madison.rds') %>%
+  filter(Year < 2023)
+
+data_desc <-
+  all %>% 
+  group_by(species, Year) %>%
+  summarize(n = n())
+
+data_desc %>% group_by(species) %>% summarize(tot = sum(n), mean = mean(n), sd = sd(n))
+
+data_desc %>% 
+  group_by(species) %>% 
+  summarize(tot = sum(n)) %>%
+  mutate(prop = tot/sum(tot), 
+         cum_prop = cumsum(prop))
+
 
 reg <- 
   all %>%
-  filter(species %in% c("Brown", "Rainbow")) %>%
+  filter(species %in% c("Brown", "Rainbow"), 
+         Year < 2023) %>%
   group_by(species, Year) %>%
   summarize(n = n()) %>%
   do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
 
+print("Brown")
+summary((reg %>% filter(species == 'Brown') %>% pull(mod))[[1]])
+
+print("Rainbow")
+summary((reg %>% filter(species == 'Rainbow') %>% pull(mod))[[1]])
 
 all %>%
   filter(species %in% c("Brown", "Rainbow")) %>%
@@ -26,11 +47,11 @@ all %>%
   summarize(n = n()) %>%
   ggplot() +
   aes(x = Year, y = n) +
-  geom_point(aes(shape = species)) + 
+  geom_point(aes(shape = species), size = 3) + 
   scale_shape_manual(name = "Species", 
-                     values = c(16, 21), 
-                     labels = c(expression(italic('S. trutta')),
-                                expression(italic('O. mykiss')))
+                     values = c(16, 21),
+                     labels = c(expression(italic('Brown trout')),
+                                expression(italic('Rainbow trout')))
   )+
   geom_smooth(
     aes(linetype = species),
@@ -42,13 +63,13 @@ all %>%
   # scale_colour_grey(aes(linetype = species)) +
   # facet_wrap(~location) + 
   xlab("Year") +
-  ylab('N individuals') +
+  ylab('N sampled individuals') +
   scale_linetype_discrete(name = "Species",
-                          labels = c(expression(italic('S. trutta')),
-                                     expression(italic('O. mykiss')))
+                          labels = c(expression(italic('Brown trout')),
+                                     expression(italic('Rainbow trout')))
   ) +
   labs(shape = "Species", linetype = 'Species') +
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom',
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
