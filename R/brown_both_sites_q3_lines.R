@@ -6,7 +6,7 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-length_cats = c(200, 330, 460, 590, 720)
+# length_cats = c(200, 330, 460, 590, 720)
 
 # For repeatability
 set.seed(256)
@@ -60,8 +60,8 @@ predict_by_10mm %>%
 all <-
   all %>%
   filter(species == 'Brown') %>%
-  filter(Length > 0 & Weight > 0) %>%
-  filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
+  filter(Length > 0 & Weight > 0)# %>%
+  # filter(Year %in% c('2003', '2004', '2009', '2011', '2014', '2016', '2019', '2021'))
 
 # Make the ref data the base level in this estimate of 0.75 quantile.
 all <-
@@ -73,7 +73,7 @@ all_75 <-
   rq(log10(Weight)~log10(Length) + Year + log10(Length):Year, data = .,
      contrasts = list(Year="contr.treatment"), tau = 0.75)
 
-all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 5000, mofn = 3000)
+all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 5000, mofn = 5000)
 
 all_75_diff <- 
   data.frame(all_75_diff$coef) %>%

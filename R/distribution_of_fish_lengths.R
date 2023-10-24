@@ -5,7 +5,7 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-length_cats <- c(200, 330, 460, 590, 720)
+# length_cats <- c(200, 330, 460, 590, 720)
 
 # For repeatability
 set.seed(256)

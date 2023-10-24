@@ -55,7 +55,7 @@ all %>%
   saveRDS("./data/predicted_angler_pressure.rds")
 
 
-#Plot the observed/expted angler data
+#Plot the observed/expected angler data
 all %>%
   filter(year <= 2030) %>%
   ggplot() +

@@ -8,6 +8,7 @@
 
 
 library(dplyr) #code orgnization
+library(lubridate) # for dates
 
 # interim data frame that handles translating species' codes to species' names
 coded_species <-
@@ -29,7 +30,9 @@ pb <-
     location = 'Pine Butte') %>%
   left_join(coded_species, by = 'Species')
 
+#Only keep fall sampling data
 
 varney %>%
   rbind(pb) %>%
+  filter(month(as.Date(Date, format = "%m/%d/%Y")) %in% c(8, 9, 10)) %>%
   saveRDS('./data/upper_madison.rds')
