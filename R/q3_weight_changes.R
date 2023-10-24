@@ -11,18 +11,28 @@ library(scales)
 set.seed(256)
 
 # Assign "trout" length categories
-assign_trout_psd <- function(data){
+assign_bnt_psd <- function(data){
   
-  ifelse((data>=200)&(data<330), "S-Q",
-         ifelse((data>=330)&(data<460), "Q-P",
-                ifelse((data>=460)&(data<590), "P-M",
-                       ifelse((data>=590)&(data<720), "M-T",
-                              ifelse(data>=720, ">T", "SS")))))
+  ifelse((data>=150)&(data<230), "S-Q",
+         ifelse((data>=230)&(data<300), "Q-P",
+                ifelse((data>=300)&(data<380), "P-M",
+                       ifelse((data>=380)&(data<460), "M-T",
+                              ifelse(data>=460, ">T", "SS")))))
+}
+
+assign_rbt_psd <- function(data){
+  
+  ifelse((data>=250)&(data<400), "S-Q",
+         ifelse((data>=400)&(data<500), "Q-P",
+                ifelse((data>=500)&(data<650), "P-M",
+                       ifelse((data>=650)&(data<800), "M-T",
+                              ifelse(data>=800, ">T", "SS")))))
 }
 
 
 all <- readRDS('./data/upper_madison.rds') %>%
-  mutate(psd = assign_trout_psd(Length), 
+  mutate(psd = ifelse(species == 'Brown', assign_bnt_psd(Length), 
+                      ifelse(species == 'Rainbow', assign_rbt_psd(Length), NA)), 
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T')))
 
 

@@ -34,9 +34,22 @@ future
 
 predicted = cbind(future, predict(mod, newdata = future, interval = 'prediction'))
 
+from_2020_pressure <- # from League and Caball 2022
+  data.frame(year = 2020, 
+             angler_days = 310762, #pg 27, table 6
+             type = 'actual', 
+             fit = NA, 
+             lwr = NA, 
+             upr = NA)
+
 all <- 
   actual %>%
-  rbind(predicted)
+  rbind(predicted) %>%
+  mutate(angler_days = ifelse(year == 2020, 310762*.67, 
+                              ifelse(year == 2019, 263735*.67, 
+                                     ifelse(year == 2017, 306448*.67, angler_days))), 
+         )#, 
+         # type = ifelse(year == 2020, 'actual', type))
 
 all %>%
   saveRDS("./data/predicted_angler_pressure.rds")
@@ -55,11 +68,11 @@ all %>%
   scale_linetype_discrete(name = "",
                           labels = c(expression(italic('Observed')),
                                      expression(italic('Predicted')))
-  ) +
+  ) + 
+  labs(shape = "", linetype = '', point = "") +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1)) + 
-  labs(shape = "", linetype = '')
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
 
