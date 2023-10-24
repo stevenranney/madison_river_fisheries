@@ -90,7 +90,7 @@ sub_stock %>%
                                      expression(italic('Rainbow trout')))
   ) +
   labs(shape = "Species", linetype = 'Species') +
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom',
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
