@@ -17,7 +17,8 @@ library(scales)
 # For repeatability
 set.seed(256)
 
-all <- readRDS('./data/upper_madison.rds')
+all <- readRDS('./data/upper_madison.rds') %>%
+  filter(Year < 2023)
 
 sub_stock <- 
   all %>% 
@@ -60,18 +61,18 @@ b %>%
 rec <- 
   sub_stock %>%
   filter(sub_stock == TRUE) %>%
-  group_by(location, species) %>%
+  group_by(species) %>%
   do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
 
 sub_stock %>%
   filter(sub_stock == TRUE) %>%
   ggplot() + 
   aes(x = Year, y = n) + 
-  geom_point(aes(shape = species)) + 
+  geom_point(aes(shape = species), size = 3) + 
   scale_shape_manual(name = "Species", 
                      values = c(16, 21), 
-                     labels = c(expression(italic('S. trutta')),
-                                expression(italic('O. mykiss')))
+                     labels = c(expression(italic('Brown Trout')),
+                                expression(italic('Rainbow trout')))
                      )+
   geom_smooth(
     aes(linetype = species),
@@ -81,13 +82,13 @@ sub_stock %>%
     size = 1
   ) + 
   # scale_colour_grey(aes(linetype = species)) +
-  facet_wrap(~location) + 
+  # facet_wrap(~location) + 
   xlab("Year") +
   ylab('N individuals < 155mm') +
   scale_linetype_discrete(name = "Species",
-                          labels = c(expression(italic('S. trutta')),
-                                     expression(italic('O. mykiss')))
-                          ) +
+                          labels = c(expression(italic('Brown Trout')),
+                                     expression(italic('Rainbow trout')))
+  ) +
   labs(shape = "Species", linetype = 'Species') +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom',
@@ -99,11 +100,7 @@ sub_stock %>%
 locations <- c('Varney', 'Pine Butte')
 
 #Brown
-for (l in 1:length(locations)){
-  print(summary((rec %>% filter(species == 'Brown' & location == locations[l]) %>% pull(mod))[[1]]))
-}
+print(summary((rec %>% filter(species == 'Brown' ) %>% pull(mod))[[1]]))
 
 # Rainbow
-for (l in 1:length(locations)){
-  print(summary((rec %>% filter(species == 'Rainbow' & location == locations[l]) %>% pull(mod))[[1]]))
-}
+print(summary((rec %>% filter(species == 'Rainbow' ) %>% pull(mod))[[1]]))
