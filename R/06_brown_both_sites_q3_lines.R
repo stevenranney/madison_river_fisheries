@@ -126,6 +126,7 @@ all_75_slope_int_est <-
   all_75_slope_int_est %>%
   mutate(Lwr95CI = `Point estimate` + SE * qt(0.025, resid_df), 
          Upr95CI = `Point estimate` + SE * qt(0.975, resid_df)) %>%
+  mutate_if(is.numeric, round, 4) %>%
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
 all_75_slope_int_est %>%
