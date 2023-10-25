@@ -6,8 +6,6 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-length_cats = c(200, 330, 460, 590, 720)
-
 # For repeatability
 set.seed(256)
 
@@ -140,9 +138,9 @@ all_75_slope_int_est %>%
 # weight at length at the midpoints of the Gabelhouse length categories
 
 var_new <-
-  data.frame(Year = rep(varney$Year %>% unique(), 5), 
-             Length = rep(c(100, 200+(330-200)/2, 330+(460-330)/2, 460+(590-460)/2, 590+(720-590)/2), each = 7), 
-             Weight = rep(NA, 35))
+  data.frame(Year = rep(all$Year %>% unique(), 5), 
+             Length = rep(c(125, 325, 450, 575, 725), each = 8), 
+             Weight = rep(NA, 40))
 
 #Empty list to store values
 predicted_output <- list()
@@ -153,18 +151,18 @@ taus <- seq(0.05, 0.95, by = 0.05)
 for(i in 1:length(taus)){
   
   #Create model for each tau
-  var_mod <- 
-    varney %>% 
+  all_mod <- 
+    all %>% 
     rq(log10(Weight)~log10(Length) + Year + log10(Length):Year, data = ., 
        contrasts = list(Year="contr.treatment"), tau = taus[i])
   
   #predict weights at length in wae_new for each tau 
-  var_pred <- predict(var_mod, newdata = var_new,
+  all_pred <- predict(all_mod, newdata = var_new,
                       type = "percentile", se = "boot", bsmethod = "xy", R = 1000,
                       mofn = 5000, interval = "confidence", level = 0.95)
   
   #exponentiate weights into g
-  var_pred_midpoints <- 10^var_pred
+  var_pred_midpoints <- 10^all_pred
   var_pred_midpoints <- data.frame(var_pred_midpoints)
   var_pred_midpoints <-
     cbind(var_new$Year,var_new$Length,var_pred_midpoints) %>%
@@ -181,15 +179,46 @@ predicted_output <-
   rename(Year = `var_new$Year`, 
          Length = `var_new$Length`) %>%
   mutate(
-    # year = ifelse(state == "GA2", "GA1", 
-    #                       ifelse(state == "GA3", "GA2", 
-    #                              ifelse(state == "GA4", "GA3", 
-    #                                     ifelse(state == "SD4", "SD1", 
-    #                                            ifelse(state == "SD13", "SD2", 
-    #                                                   ifelse(state == "SD25", "SD3", "Reference")))))), 
     Year = Year %>% as.factor(), 
     Year = Year %>% relevel(ref = "2003"))
 
 predicted_output %>%
   saveRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
 
+predicted_output <- readRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+
+
+###############################################################################
+p <- 
+  predicted_output %>%
+  rename(weight = fit) %>%
+  mutate(length = paste0("TL = ", Length), 
+         length = factor(length, levels = c("TL = 75", "TL = 190", "TL = 265", "TL = 340", "TL = 420"))) %>% 
+  filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
+  ggplot(aes(x = tau, y = weight, fill = Year)) +
+  geom_line(aes(linetype = Year), lwd = 0.65) +
+  geom_ribbon(aes(x = tau, ymin = lower, ymax = higher, fill = Year, alpha = 0.05)) +
+  facet_wrap(~length, scales = "free_y") +
+  labs(x= "Quantile", y = "Weight (g)") +
+  scale_fill_manual(name = "Year", 
+                    labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022), 
+                    values = alpha(hue_pal()(8), alpha = 0.5)) +
+  scale_linetype_manual(name = "Year", 
+                        labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022), 
+                        values = c(1,3,4,6, 7, 9, 10, 11)) +
+  scale_alpha(guide = "none") +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = seq(0.05, 0.95, by = .15)) +
+  theme_bw() +
+  theme_minimal(base_size = 20) +
+  theme(legend.position = c(.875, .06), 
+        legend.justification = c(1, 0), 
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        strip.background = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+
+ggsave(paste0("output/", Sys.Date(), "_rainbow_plots_color.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
