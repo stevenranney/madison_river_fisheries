@@ -18,3 +18,8 @@ assign_rbt_psd <- function(data){
                        ifelse((data>=650)&(data<800), "M-T",
                               ifelse(data>=800, ">T", "SS")))))
 }
+
+round_down <- function(x,to=10)
+{
+  to*(x %/% to)
+}
