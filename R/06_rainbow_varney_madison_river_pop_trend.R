@@ -183,17 +183,18 @@ predicted_output <-
     Year = Year %>% relevel(ref = "2003"))
 
 predicted_output %>%
-  saveRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+  saveRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
 
-predicted_output <- readRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+predicted_output <- readRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
 
 
 ###############################################################################
+# c(125, 325, 450, 575, 725)
 p <- 
   predicted_output %>%
   rename(weight = fit) %>%
   mutate(length = paste0("TL = ", Length), 
-         length = factor(length, levels = c("TL = 75", "TL = 190", "TL = 265", "TL = 340", "TL = 420"))) %>% 
+         length = factor(length, levels = c("TL = 125", "TL = 325", "TL = 450", "TL = 575", "TL = 725"))) %>% 
   filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   ggplot(aes(x = tau, y = weight, fill = Year)) +
   geom_line(aes(linetype = Year), lwd = 0.65) +
@@ -219,6 +220,7 @@ p <-
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
+p
 
 ggsave(paste0("output/", Sys.Date(), "_rainbow_plots_color.png"), plot = p, 
        width = 16, height = 9, bg = "white")
