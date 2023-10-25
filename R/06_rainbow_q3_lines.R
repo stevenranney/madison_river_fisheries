@@ -6,7 +6,7 @@ library(scales)
 
 # source("R/helper_functions.R")
 
-# length_cats = c(200, 330, 460, 590, 720)
+length_cats = c(200, 330, 460, 590, 720)
 
 # For repeatability
 set.seed(256)
@@ -18,15 +18,14 @@ all <- readRDS('./data/upper_madison.rds') %>%
   mutate(Year = as.factor(Year))
 
 
-
 #################################################################################
-# BROWN TROUT
+# Rainbow TROUT
 # Table of quantiles and predictions of weight-at-length
 
 # Five quantiles at once with their predictions by 10mm increments
-brown_ref_10to90 <-
+rainbow_ref_10to90 <-
   all %>%
-  filter(species == 'Brown', 
+  filter(species == 'Rainbow', 
          Length > 0 & Weight > 0) %>%
   rq(log10(Weight)~log10(Length), data = ., tau = c(0.10, 0.25, 0.50, 0.75, 0.90))
 
@@ -34,7 +33,7 @@ by10mm <-
   data.frame(Length = seq(50, 720, by = 10))
 
 predict_by_10mm <- 
-  predict(brown_ref_10to90, newdata = by10mm, confidence = none)
+  predict(rainbow_ref_10to90, newdata = by10mm, confidence = none)
 
 # Create, as much as possible, the prediction table in R so not as much 
 # Excel or Word formatting needs to be done.
@@ -52,7 +51,7 @@ predict_by_10mm <-
          `0.90` = "tau..0.90")
 
 predict_by_10mm %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_predicted_values.csv"),
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_predicted_values.csv"),
             row.names = FALSE)
 
 #-----------------------------------------------------------------------------
@@ -62,7 +61,7 @@ predict_by_10mm %>%
 
 all <-
   all %>%
-  filter(species == 'Brown') %>%
+  filter(species == 'Rainbow') %>%
   filter(Length > 0 & Weight > 0)
 
 # Make the ref data the base level in this estimate of 0.75 quantile.
@@ -98,7 +97,7 @@ all_75_diff <-
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
 all_75_diff %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_differences_in_slope_int.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_differences_in_slope_int.csv"), 
             row.names = FALSE)
 
 # Retrieve slope and intercept for each population
@@ -131,8 +130,9 @@ all_75_slope_int_est <-
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
 all_75_slope_int_est %>%
-  write.csv(paste0("output/", Sys.Date(), "_brown_slope_int_estimates.csv"), 
+  write.csv(paste0("output/", Sys.Date(), "_rainbow_slope_int_estimates.csv"), 
             row.names = FALSE)
+
 
 
 #-----------------------------------------------------------------------------
@@ -141,7 +141,7 @@ all_75_slope_int_est %>%
 
 var_new <-
   data.frame(Year = rep(all$Year %>% unique(), 5), 
-             Length = rep(c(75, 190, 265, 340, 420), each = 8), 
+             Length = rep(c(175, 325, 450, 575, 725), each = 8), 
              Weight = rep(NA, 40))
 
 #Empty list to store values
@@ -185,15 +185,16 @@ predicted_output <-
     Year = Year %>% relevel(ref = "2003"))
 
 predicted_output %>%
-  saveRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+  saveRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
 
-predicted_output <- readRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+predicted_output <- readRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
+
 ###########################################################
 p <- 
-  predicted_output %>%
-  rename(weight = fit) %>%
+  predicted_output %>% 
+  rename(weight = fit) %>% 
   mutate(length = paste0("TL = ", Length), 
-         length = factor(length, levels = c("TL = 75", "TL = 190", "TL = 265", "TL = 340", "TL = 420"))) %>% 
+         length = factor(length, levels = c("TL = 175", "TL = 325", "TL = 450", "TL = 575", "TL = 725"))) %>% 
   filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   ggplot(aes(x = tau, y = weight, fill = Year)) +
   geom_line(aes(linetype = Year), lwd = 0.65) +
@@ -219,9 +220,12 @@ p <-
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 
+p
 
-ggsave(paste0("output/", Sys.Date(), "_brown_plots_color.png"), plot = p, 
+
+ggsave(paste0("output/", Sys.Date(), "_rainbow_plots_color.png"), plot = p, 
        width = 16, height = 9, bg = "white")
+
 
 
 

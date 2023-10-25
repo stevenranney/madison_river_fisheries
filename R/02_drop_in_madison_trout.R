@@ -75,6 +75,7 @@ all %>%
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
 
+# All fish, psd based
 all %>%
   filter(species %in% c("Brown", "Rainbow")) %>%
   group_by(species, psd, Year) %>%
