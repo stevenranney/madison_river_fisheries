@@ -31,6 +31,7 @@ assign_rbt_psd <- function(data){
 
 
 all <- readRDS('./data/upper_madison.rds') %>%
+  filter(Year < 2023) %>%
   mutate(psd = ifelse(species == 'Brown', assign_bnt_psd(Length), 
                       ifelse(species == 'Rainbow', assign_rbt_psd(Length), NA)), 
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T')))
