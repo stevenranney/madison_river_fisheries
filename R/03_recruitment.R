@@ -4,6 +4,8 @@
 # The B0 and B1 terms for a linear model describing brown trout < 155m at Varney and Pine Butte 
 # are significant and the slope is negative though the R^2 values for both aren't very high (.7 for Varney, 
 # -0.5 for Pine Butte)
+#2. HOWEVER, these fish may not have been fully recruited to the sampling gear. Regardless, given the standardize
+# nature of this sampling regime, inferences can still be made from these data.
 
 library(quantreg) 
 library(ggplot2) #plotting
@@ -64,7 +66,7 @@ rec <-
   group_by(species) %>%
   do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
 
-sub_stock %>%
+p <- sub_stock %>%
   filter(sub_stock == TRUE) %>%
   ggplot() + 
   aes(x = Year, y = n) + 
@@ -96,6 +98,11 @@ sub_stock %>%
         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
   # panel.grid.minor = element_blank())
   
+p
+
+ggsave(paste0("output/images/", Sys.Date(), "_drop_in_recruitment.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
   
 locations <- c('Varney', 'Pine Butte')
 

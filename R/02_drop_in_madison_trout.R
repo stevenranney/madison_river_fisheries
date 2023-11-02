@@ -1,6 +1,6 @@
 library(quantreg) 
 library(ggplot2) #plotting
-library(dplyr) #code orgnization
+library(dplyr) #code organization
 library(scales)
 
 # source("R/helper_functions.R")
@@ -42,10 +42,11 @@ print("Rainbow")
 summary((reg %>% filter(species == 'Rainbow') %>% pull(mod))[[1]])
 
 # All fish
-all %>%
+p <- 
+  all %>%
   filter(species %in% c("Brown", "Rainbow")) %>%
   group_by(species, Year) %>%
-  summarize(n = n()/2) %>%
+  summarize(n = n()) %>% #/2) %>%
   ggplot() +
   aes(x = Year, y = n) +
   geom_point(aes(shape = species), size = 3) + 
@@ -53,7 +54,7 @@ all %>%
                      values = c(16, 21),
                      labels = c('Brown trout',
                                 'Rainbow trout')
-  )+
+  ) +
   geom_smooth(
     aes(linetype = species),
     method = 'lm',
@@ -62,7 +63,7 @@ all %>%
     size = 1
   ) +
   # scale_colour_grey(aes(linetype = species)) +
-  # facet_wrap(~species) +
+  # facet_grid(species) +
   xlab("Year") +
   ylab('N individuals/river mile') +
   scale_linetype_discrete(name = "Species",
@@ -75,36 +76,43 @@ all %>%
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
 
-# All fish, psd based
-all %>%
-  filter(species %in% c("Brown", "Rainbow")) %>%
-  group_by(species, psd, Year) %>%
-  summarize(n = n()/2) %>%
-  ggplot() +
-  aes(x = Year, y = n) +
-  geom_line(aes(colour = psd, linetype = psd), size = 1.5) + 
-  # scale_shape_manual(name = "Species", 
-  #                    values = c(16, 21),
-  #                    labels = c(expression(italic('Brown trout')),
-  #                               expression(italic('Rainbow trout')))
-  # )+
-  # geom_smooth(
-  #   aes(linetype = species),
-  #   method = 'lm', 
-  #   se = FALSE, 
-  #   colour = 'black', 
-  #   size = 1
-# ) + 
-# scale_colour_grey(aes(linetype = species)) +
-facet_wrap(~species) +
-  xlab("Year") +
-  ylab('N individuals/river mile') +
-  scale_linetype_discrete(name = "PSD",
-                          labels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', ">T")
-  ) +
-  labs(shape = "PSD", linetype = 'PSD', colour = 'PSD') +
-  theme_minimal(base_size = 30) +
-  theme(legend.position = 'bottom',
-        panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))#,
-# panel.grid.minor = element_blank())
+p
+
+ggsave(paste0("output/images/", Sys.Date(), "_drop_in_madison_trout.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
+
+
+# # All fish, psd based
+# all %>%
+#   filter(species %in% c("Brown", "Rainbow")) %>%
+#   group_by(species, location, psd, Year) %>%
+#   summarize(n = n()/2) %>%
+#   ggplot() +
+#   aes(x = Year, y = n) +
+#   geom_line(aes(colour = psd, linetype = psd), size = 1.5) + 
+#   # scale_shape_manual(name = "Species", 
+#   #                    values = c(16, 21),
+#   #                    labels = c(expression(italic('Brown trout')),
+#   #                               expression(italic('Rainbow trout')))
+#   # )+
+#   # geom_smooth(
+#   #   aes(linetype = species),
+#   #   method = 'lm', 
+#   #   se = FALSE, 
+#   #   colour = 'black', 
+#   #   size = 1
+# # ) + 
+# # scale_colour_grey(aes(linetype = species)) +
+# facet_grid(species~location) +
+#   xlab("Year") +
+#   ylab('N individuals/river mile') +
+#   scale_linetype_discrete(name = "PSD",
+#                           labels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', ">T")
+#   ) +
+#   labs(shape = "PSD", linetype = 'PSD', colour = 'PSD') +
+#   theme_minimal(base_size = 30) +
+#   theme(legend.position = 'bottom',
+#         panel.grid.minor = element_blank(),
+#         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
+# # panel.grid.minor = element_blank())
