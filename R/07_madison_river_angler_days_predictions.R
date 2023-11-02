@@ -33,7 +33,7 @@ future <- data.frame(
   type = 'predicted')
 future
 
-predicted = cbind(future, predict(mod, newdata = future, interval = 'prediction'))
+predicted = cbind(future, predict(mod, newdata = future, interval = 'prediction', level = 0.95))
 
 from_2020_pressure <- # from League and Caball 2022
   data.frame(year = 2020, 
@@ -57,7 +57,8 @@ all %>%
 
 
 #Plot the observed/expected angler data
-all %>%
+p <- 
+  all %>%
   filter(year <= 2030) %>%
   ggplot() +
   aes(x = year, y = fit) +
@@ -67,20 +68,31 @@ all %>%
   xlab("Year") +
   ylab('N anglers/year\n(upper Madison River)') +
   scale_linetype_discrete(name = "",
-                          labels = c(expression(italic('Observed')),
-                                     expression(italic('Predicted')))
+                          labels = c('Observed and 95% confidence interval',
+                                     'Prediction and 95% prediction interval')
   ) + 
+  # scale_shape_manual(name = "test", 
+  #                    values = c(16, NA), 
+  #                    labels = c('Observed',
+  #                               NA)
+  # ) +
   labs(shape = "", linetype = '', point = "") +
+  scale_y_continuous(labels = label_comma()) +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-all %>% 
-  filter(year >= 2023 & year <= 2030) %>% 
-  select(year, fit, lwr, upr) %>% 
-  pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
-  mutate(n_upper_anglers = n_anglers * .67)
+p
 
+ggsave(paste0("output/images/", Sys.Date(), "_predicted_yearly_n_anglers.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
+# all %>% 
+#   filter(year >= 2023 & year <= 2030) %>% 
+#   select(year, fit, lwr, upr) %>% 
+#   pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
+#   mutate(n_upper_anglers = n_anglers * .67)
+# 
 

@@ -9,94 +9,100 @@ season_length = summer # days
 # angler_days = 58716 * .58
 # angler_days = 400000 * .58 # predicted in 2030
 angling_est <-
-  readRDS('./data/predicted_angler_pressure.rds')
-
-angler_days <- angling_est %>% filter(year == 2023) %>% pull(fit) # total upper river, 
-# estimated from predicted_angler_pressure.rds
-summer_prop <-.67 # proportion of all Madison pressure that happens in summer, 2020 fishing pressure survey, 
-# Montana statewide angling pressure 2020, League and Caball
-# trips <- 1597 * .58
-
-angler_days*summer_prop/season_length
+  readRDS('./data/predicted_angler_pressure.rds') %>%
+  filter(year >= 2023 & year <= 2030) %>% 
+  select(year, fit, lwr, upr) %>% 
+  pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
+  mutate(n_upper_anglers = n_anglers * .67, 
+         bnt_catch = NA, 
+         rbt_catch = NA)
 
 
-# increase angler days by 36% SW mt population and 20% of those as anglers
-# Don't recall where these numbers come from
-# 1.4% is increase of BZN pop, c(.1, .2, .5) is potential increase of the BZN pop as anglers?
-new_angler_days = angler_days+(angler_days*.014*c(.1, .2, .5))
-new_angler_days[3]
+###############################################################################
+# For each lwr, fit, upr of predicted anglers, calculate mortality of BNT and RBT separately
+# FOR BROWN TROUT
+# Catch rate = 0.38
+for (i in 1:nrow(angling_est)){
+  
+  sim <- conduct_multiple_surveys(
+    n_sims = season_length, # number of days to estimate catch and effort, 91 days in summer
+    start_time = 0, # start time of fishing day
+    wait_time = 11, #end time of fishing day
+    n_sites = 1, #number of sites sampled, all of upper Madison River
+    n_anglers = (angling_est$n_upper_anglers[i]*summer_prop)/summer, # n anglers total upper summer anglers/n days in summer = angler_days per day
+    sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
+    mean_catch_rate = 0.38, # catch rate of trout -- 0.38
+    fishing_day_length = 11, # total length of fishing day
+    mean_trip_length = 5.6) # average trip length
+  
+  angling_est$bnt_catch[i] <- sum(sim$true_catch)
+}
 
-# Single season long
-# 11 hour day length (horton 2017, pg 24)
-# discounting whitefish caught; catch rate for RBT and BNT only
-sim <- conduct_multiple_surveys(
-  n_sims = season_length, # number of days to estimate catch and effort, 91 days in summer
-  start_time = 0, # start time of fishing day
-  wait_time = 11, #end time of fishing day
-  n_sites = 1, #number of sites sampled, all of upper Madison River
-  n_anglers = (angler_days*summer_prop)/summer, # n anglers total upper summer anglers/n days in summer = angler_days per day
-  sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
-  mean_catch_rate = 0.88, # mean catch rate of trout -- RBT = 0.68
-  fishing_day_length = 11, # total length of fishing day
-  mean_trip_length = 5.6) # average trip length
+# FOR RAINBOW TROUT
+# Catch rate = 0.62
+for (i in 1:nrow(angling_est)){
+  
+  sim <- conduct_multiple_surveys(
+    n_sims = season_length, # number of days to estimate catch and effort, 91 days in summer
+    start_time = 0, # start time of fishing day
+    wait_time = 11, #end time of fishing day
+    n_sites = 1, #number of sites sampled, all of upper Madison River
+    n_anglers = (angling_est$n_upper_anglers[i]*summer_prop)/summer, # n anglers total upper summer anglers/n days in summer = angler_days per day
+    sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
+    mean_catch_rate = 0.62, # catch rate of trout -- 0.38
+    fishing_day_length = 11, # total length of fishing day
+    mean_trip_length = 5.6) # average trip length
+  
+  angling_est$rbt_catch[i] <- sum(sim$true_catch)
+}
 
-sim %>%
+p <- 
+  angling_est %>%
+  mutate(Brown = bnt_catch * 0.02, 
+         Rainbow = rbt_catch * 0.08) %>%
+  select(year, type, Brown, Rainbow) %>%
+  pivot_longer(c(Brown, Rainbow), names_to = 'species', values_to = 'mortality') %>%
   ggplot() +
-  aes(x = true_effort, y = true_catch) +
-  geom_point() + 
-  geom_smooth(method = 'lm')
+  geom_line(
+    data = . %>% filter(type == 'fit'), 
+    aes(x = year, y = mortality, linetype = type), 
+    size = 1) +
+  geom_ribbon(
+    data = . %>% pivot_wider(names_from = type, values_from = mortality), 
+    aes(x = year, ymin = lwr, ymax = upr, fill = 'band'), 
+    # fill = 'grey', 
+    alpha = 0.5) + 
+  facet_grid(~species, scales = "free") +
+  xlab("Year") +
+  ylab('Predicted annual mortality') +
+  scale_linetype_manual(name = "",
+                        values = 'solid', 
+                        labels = "Fit"
+  ) + 
+  scale_fill_manual("", values = "grey", labels = 'Prediction interval') +
+  labs(linetype = '', fill = '') +
+  # scale_y_continuous(labels = label_comma()) +
+  theme_minimal(base_size = 30) +
+  theme(legend.position = 'bottom',
+        legend.title=element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-# Estimate mortality, 8% assumed in Horton 2017, pg 23
-# Sum expected catch of anglers from simulated season and estimate low to high total mortality based
-# on several different rates
-# range of mortality estimates
-sum(sim$true_catch)*seq(.00, 0.24, by = 0.005)
+p
 
-mortality <- 
-  data.frame(mort_rate = seq(.01, 0.24, by = 0.005)) %>%
-  mutate(n_mort = mort_rate * (sum(sim$true_catch)*.5)) #multiplied by 50% because there's a pretty straight 50/50 split between rbt and bnt now
-
-
-mortality %>%
-  ggplot() +
-  aes(x = mort_rate, y = n_mort) +
-  geom_line() +
-  geom_hline(yintercept = 30000, linetype = 2)
-
-# #recyling rates
-# # total trout catch divided by 
-(sum(sim$true_catch)/2)/c((2500*54), (2400*54)) #population estimates of rbt and bnt from horton 2017?
-
-
-# portion of catch from new residents
-new_catch = sum(sim$true_catch)*(angler_days*.014*c(.1, .2, .5))/angler_days
-
-# portion of catch from "old" residents
-old_catch = sum(sim$true_catch)*(1-(angler_days*.014*c(.1, .2, .5))/angler_days)
-
-new_catch_mortality <- 
-  data.frame(
-    catch_by_new = new_catch
-  )
-
-new_catch_mortality <-
-  new_catch_mortality %>%
-  mutate(mort_10 = catch_by_new * .1, 
-         mort_13 = catch_by_new * .13, 
-         mort_16 = catch_by_new * .16)
-
-new_catch_mortality
+ggsave(paste0("output/images/", Sys.Date(), "_predicted_annual_mortality.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
 
 
-old_catch_mortality <- 
-  data.frame(
-    catch_by_old = old_catch
-  )
 
-old_catch_mortality <-
-  old_catch_mortality %>%
-  mutate(mort_02 = catch_by_old * .02, 
-         mort_05 = catch_by_old * .05, 
-         mort_08 = catch_by_old * .08)
 
-old_catch_mortality
+
+
+
+
+
+
+
+
+
+
