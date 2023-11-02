@@ -11,23 +11,23 @@ season_length = summer # days
 angling_est <-
   readRDS('./data/predicted_angler_pressure.rds')
 
-angler_days <- angling_est %>% filter(year == 2023) %>% pull(fit) # estiamted from predicted_angler_pressure.rds
-summer_prop <-.67 # proportion of all madison pressure that happens in summer, 2020 fishing pressure survey, 
+angler_days <- angling_est %>% filter(year == 2023) %>% pull(fit) # total upper river, 
+# estimated from predicted_angler_pressure.rds
+summer_prop <-.67 # proportion of all Madison pressure that happens in summer, 2020 fishing pressure survey, 
 # Montana statewide angling pressure 2020, League and Caball
-trips <- 1597 * .58
+# trips <- 1597 * .58
 
 angler_days*summer_prop/season_length
-summer
+
 
 # increase angler days by 36% SW mt population and 20% of those as anglers
 # Don't recall where these numbers come from
-# 1.4% is increase of BZN pop, c(.1, .2, .5) i spotential increase of the BZN pop as anglers?
+# 1.4% is increase of BZN pop, c(.1, .2, .5) is potential increase of the BZN pop as anglers?
 new_angler_days = angler_days+(angler_days*.014*c(.1, .2, .5))
 new_angler_days[3]
 
-#multiple simulations = 100 days? - season == 90 days, 
 # Single season long
-#11 hour day length (horton 2017, pg 24)
+# 11 hour day length (horton 2017, pg 24)
 # discounting whitefish caught; catch rate for RBT and BNT only
 sim <- conduct_multiple_surveys(
   n_sims = season_length, # number of days to estimate catch and effort, 91 days in summer
