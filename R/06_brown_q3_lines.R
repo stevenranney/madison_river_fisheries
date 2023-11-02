@@ -223,7 +223,7 @@ p <-
 p
 
 
-ggsave(paste0("output/", Sys.Date(), "_brown_plots_color.png"), plot = p, 
+ggsave(paste0("output/images/", Sys.Date(), "_brown_plots_color.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 
