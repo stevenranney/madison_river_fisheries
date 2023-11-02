@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(mgcv)
 library(scales)
+library(tidyr)
 
 # From 2020 survey: totals and summer
 # .58 is proportion of users who use "upper" river
@@ -75,4 +76,11 @@ all %>%
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+all %>% 
+  filter(year >= 2023 & year <= 2030) %>% 
+  select(year, fit, lwr, upr) %>% 
+  pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
+  mutate(n_upper_anglers = n_anglers * .67)
+
 
