@@ -73,8 +73,8 @@ p <- sub_stock %>%
   geom_point(aes(shape = species), size = 3) + 
   scale_shape_manual(name = "Species", 
                      values = c(16, 21), 
-                     labels = c(expression(italic('Brown Trout')),
-                                expression(italic('Rainbow trout')))
+                     labels = c('Brown Trout',
+                                'Rainbow trout')
                      )+
   geom_smooth(
     aes(linetype = species),
@@ -88,8 +88,8 @@ p <- sub_stock %>%
   xlab("Year") +
   ylab('N individuals < 155mm') +
   scale_linetype_discrete(name = "Species",
-                          labels = c(expression(italic('Brown Trout')),
-                                     expression(italic('Rainbow trout')))
+                          labels = c('Brown Trout',
+                                     'Rainbow trout')
   ) +
   labs(shape = "Species", linetype = 'Species') +
   theme_minimal(base_size = 30) +

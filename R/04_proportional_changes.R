@@ -28,8 +28,8 @@ location_prop %>%
   ylab('Proportion') +
   scale_y_continuous(limits = c(0, 1)) +
   scale_linetype_discrete(name = "Species", 
-                        labels = c(expression(italic('S. trutta')), 
-                                   expression(italic('O. mykiss')))
+                        labels = c('Brown Trout', 
+                                   'Rainbow Trout')
                         ) +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom', 
@@ -58,8 +58,8 @@ prop %>%
   ylab('Proportion') +
   scale_y_continuous(limits = c(0, 1)) +
   scale_linetype_discrete(name = "Species", 
-                          labels = c(expression(italic('S. trutta')), 
-                                     expression(italic('O. mykiss')))
+                          labels = c('Brown Trout', 
+                                     'Rainbow Trout')
   ) +
   theme_minimal(base_size = 20) +
   theme(legend.position = 'bottom', 

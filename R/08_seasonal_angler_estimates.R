@@ -17,6 +17,8 @@ angling_est <-
          bnt_catch = NA, 
          rbt_catch = NA)
 
+trip_length <- 5.6
+day_length <- 11
 
 ###############################################################################
 # For each lwr, fit, upr of predicted anglers, calculate mortality of BNT and RBT separately
@@ -33,13 +35,13 @@ for (i in 1:nrow(angling_est)){
     sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
     mean_catch_rate = 0.38, # catch rate of trout -- 0.38
     fishing_day_length = 11, # total length of fishing day
-    mean_trip_length = 5.6) # average trip length
+    mean_trip_length = trip_length) # average trip length
   
   angling_est$bnt_catch[i] <- sum(sim$true_catch)
 }
 
 # FOR RAINBOW TROUT
-# Catch rate = 0.62
+# Catch rate = 0.64
 for (i in 1:nrow(angling_est)){
   
   sim <- conduct_multiple_surveys(
@@ -49,9 +51,9 @@ for (i in 1:nrow(angling_est)){
     n_sites = 1, #number of sites sampled, all of upper Madison River
     n_anglers = (angling_est$n_upper_anglers[i]*summer_prop)/summer, # n anglers total upper summer anglers/n days in summer = angler_days per day
     sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
-    mean_catch_rate = 0.62, # catch rate of trout -- 0.38
+    mean_catch_rate = 0.64, # catch rate of trout -- 0.38
     fishing_day_length = 11, # total length of fishing day
-    mean_trip_length = 5.6) # average trip length
+    mean_trip_length = trip_length) # average trip length
   
   angling_est$rbt_catch[i] <- sum(sim$true_catch)
 }
