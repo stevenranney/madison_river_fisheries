@@ -187,7 +187,7 @@ predicted_output <-
 predicted_output %>%
   saveRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
 
-predicted_output <- readRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
+# predicted_output <- readRDS(paste0("data/", Sys.Date(), "_brown_predicted_weight_at_length.rds"))
 ###########################################################
 p <- 
   predicted_output %>%
@@ -211,13 +211,16 @@ p <-
   scale_x_continuous(breaks = seq(0.05, 0.95, by = .15)) +
   theme_bw() +
   theme_minimal(base_size = 20) +
-  theme(legend.position = c(.875, .06), 
+  theme(legend.position = c(.875, -0.03), 
         legend.justification = c(1, 0), 
+        legend.key.size = unit(0.4, 'in'),
         panel.border = element_rect(colour = "black", fill=NA, size=1),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
         strip.background = element_blank(), 
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
+
+p
 
 
 ggsave(paste0("output/", Sys.Date(), "_brown_plots_color.png"), plot = p, 
