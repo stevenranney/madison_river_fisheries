@@ -76,7 +76,7 @@ p <- growth %>%
   facet_grid(species~location) +
   # facet_wrap(species~location) +
   xlab('Year') +
-  ylab(bquote(3^'rd'~" Quartile Weight (g)")) +
+  ylab(bquote(2^'nd'~" Quartile Weight (g)")) +
   # scale_y_continuous(limits = c(0, 1)) +
   scale_linetype_discrete(name = "PSD", 
                           labels = c("SS", 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))+
