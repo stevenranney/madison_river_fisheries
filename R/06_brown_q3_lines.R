@@ -212,7 +212,7 @@ p <-
   labs(tag = '(A)') + 
   theme_bw() +
   theme_minimal(base_size = 30) +
-  theme(legend.position = c(.875, -0.1), 
+  theme(legend.position = c(.875, -0.2), 
         legend.justification = c(1, 0), 
         legend.key.size = unit(0.35, 'in'),
         panel.border = element_rect(colour = "black", fill=NA, size=1),

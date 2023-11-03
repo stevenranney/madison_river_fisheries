@@ -78,7 +78,7 @@ p <-
   # ) +
   labs(shape = "", linetype = '', point = "") +
   scale_y_continuous(labels = label_comma()) +
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
