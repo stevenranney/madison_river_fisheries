@@ -17,7 +17,8 @@ location_prop <-
   group_by(Year, location) %>%
   mutate(freq = n/sum(n))
 
-location_prop %>%
+p <- 
+  location_prop %>%
   ggplot() +
   aes(x = as.numeric(as.character(Year)), y = freq) + #, colour = species) +
   geom_line(aes(linetype = species), size = 1) +
@@ -31,11 +32,17 @@ location_prop %>%
                         labels = c('Brown Trout', 
                                    'Rainbow Trout')
                         ) +
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom', 
         panel.grid.minor = element_blank(), 
         panel.border = element_rect(colour = "black", fill=NA, size=1))#, 
         # panel.grid.minor = element_blank())
+
+p
+
+ggsave(paste0("output/images/", Sys.Date(), "_proportional_changes.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
 
 
 # Not split by location

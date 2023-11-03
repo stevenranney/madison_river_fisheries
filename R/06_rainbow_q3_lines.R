@@ -141,7 +141,7 @@ all_75_slope_int_est %>%
 
 var_new <-
   data.frame(Year = rep(all$Year %>% unique(), 5), 
-             Length = rep(c(175, 325, 450, 575, 725), each = 8), 
+             Length = rep(c(125, 325, 450, 575, 725), each = 8), 
              Weight = rep(NA, 40))
 
 #Empty list to store values
@@ -194,7 +194,7 @@ p <-
   predicted_output %>% 
   rename(weight = fit) %>% 
   mutate(length = paste0("TL = ", Length), 
-         length = factor(length, levels = c("TL = 175", "TL = 325", "TL = 450", "TL = 575", "TL = 725"))) %>% 
+         length = factor(length, levels = c("TL = 125", "TL = 325", "TL = 450", "TL = 575", "TL = 725"))) %>% 
   filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   ggplot(aes(x = tau, y = weight, fill = Year)) +
   geom_line(aes(linetype = Year), lwd = 0.65) +
@@ -211,10 +211,10 @@ p <-
   scale_y_continuous(labels = comma) +
   scale_x_continuous(breaks = seq(0.05, 0.95, by = .15)) +
   theme_bw() +
-  theme_minimal(base_size = 20) +
-  theme(legend.position = c(.875, -0.03), 
+  theme_minimal(base_size = 30) +
+  theme(legend.position = c(.875, -0.1), 
         legend.justification = c(1, 0), 
-        legend.key.size = unit(0.4, 'in'),
+        legend.key.size = unit(0.35, 'in'),
         panel.border = element_rect(colour = "black", fill=NA, size=1),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
         strip.background = element_blank(), 

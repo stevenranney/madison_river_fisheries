@@ -210,10 +210,10 @@ p <-
   scale_y_continuous(labels = comma) +
   scale_x_continuous(breaks = seq(0.05, 0.95, by = .15)) +
   theme_bw() +
-  theme_minimal(base_size = 20) +
-  theme(legend.position = c(.875, -0.03), 
+  theme_minimal(base_size = 30) +
+  theme(legend.position = c(.875, -0.1), 
         legend.justification = c(1, 0), 
-        legend.key.size = unit(0.4, 'in'),
+        legend.key.size = unit(0.35, 'in'),
         panel.border = element_rect(colour = "black", fill=NA, size=1),
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
         strip.background = element_blank(), 
