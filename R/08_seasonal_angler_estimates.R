@@ -62,7 +62,7 @@ p <-
   angling_est %>%
   mutate(Brown = bnt_catch * 0.02, 
          Rainbow = rbt_catch * 0.08) %>%
-  select(year, type, Brown, Rainbow) %>%
+  select(year, type, bnt_catch, rbt_catch, Brown, Rainbow) %>%
   pivot_longer(c(Brown, Rainbow), names_to = 'species', values_to = 'mortality') %>%
   ggplot() +
   geom_line(
@@ -94,6 +94,26 @@ p
 
 ggsave(paste0("output/images/", Sys.Date(), "_predicted_annual_mortality.png"), plot = p, 
        width = 16, height = 9, bg = "white")
+
+
+
+angling_est %>%
+  mutate(Brown = bnt_catch * 0.02, 
+         Rainbow = rbt_catch * 0.08) %>%
+  select(year, type, bnt_catch, rbt_catch, Brown, Rainbow) %>% 
+  mutate(bnt_catch = round(bnt_catch, 0), 
+         rbt_catch = round(rbt_catch, 0), 
+         Brown = round(Brown, 0), 
+         Rainbow = round(Rainbow, 0), 
+  ) %>%
+  pivot_wider(
+    names_from = type, 
+    values_from = c(bnt_catch, rbt_catch, Brown, Rainbow)) %>% 
+  select(year, bnt_catch_lwr, bnt_catch_fit, bnt_catch_upr, 
+         rbt_catch_lwr, rbt_catch_fit, rbt_catch_upr, 
+         Brown_lwr, Brown_fit, Brown_upr, 
+         Rainbow_lwr, Rainbow_fit, Rainbow_upr) %>%
+  write.csv(paste0("output/", Sys.Date(), "_predicted_annual_catch_mortality.csv"))
 
 
 
