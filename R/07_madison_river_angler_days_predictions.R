@@ -82,8 +82,11 @@ p <-
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
-
+        # panel.border = element_rect(colour = "black", fill=NA, size=1)
+        # panel.border = element_blank(), 
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
 p
 
 ggsave(paste0("output/images/", Sys.Date(), "_predicted_yearly_n_anglers.png"), plot = p, 

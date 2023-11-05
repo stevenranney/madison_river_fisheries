@@ -1,9 +1,11 @@
 library(AnglerCreelSurveySimulation)
 library(ggplot2)
 library(dplyr)
+library(tidyr)
 
 summer = as.numeric(as.Date('2023-08-31') - as.Date("2023-06-01"))
 season_length = summer # days
+summer_prop = 0.67
 
 # From madison river pressure survey -- upper river proportion of surveys from Skaar == 58%
 # angler_days = 58716 * .58
@@ -41,7 +43,7 @@ for (i in 1:nrow(angling_est)){
 }
 
 # FOR RAINBOW TROUT
-# Catch rate = 0.64
+# Catch rate = 0.52
 for (i in 1:nrow(angling_est)){
   
   sim <- conduct_multiple_surveys(
@@ -88,7 +90,8 @@ p <-
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+        panel.border = element_rect(colour = "black", fill=NA, size=1)
+        )
 
 p
 
