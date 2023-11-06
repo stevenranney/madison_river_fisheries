@@ -5,3 +5,5 @@ A work-in-progress to describe what's happening to the trout and angler populati
 This started as an analysis in Python but for some things, R really is better.
 
 Target journal: North American Journal of Fisheries Management
+
+Files are named "in order" of how I've drafted the manuscript; running `00_helper_functions.R`, then `01_...`, etc, will recreate all the data files and images needed for anyone new to this repository.
