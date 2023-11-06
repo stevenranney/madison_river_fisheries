@@ -13,7 +13,7 @@ set.seed(256)
 
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
-all <- readRDS('./data/upper_madison.rds') %>%
+all <- readRDS('./data/01_upper_madison.rds') %>%
   filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   mutate(Year = as.factor(Year))
 

@@ -40,4 +40,4 @@ varney %>%
   mutate(psd = ifelse(species == 'Brown', assign_bnt_psd(Length), 
                       ifelse(species == 'Rainbow', assign_rbt_psd(Length), NA)), 
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))) %>%
-  saveRDS('./data/upper_madison.rds')
+  saveRDS('./data/01_upper_madison.rds')

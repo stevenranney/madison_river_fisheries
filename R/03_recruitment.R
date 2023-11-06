@@ -19,7 +19,7 @@ library(scales)
 # For repeatability
 set.seed(256)
 
-all <- readRDS('./data/upper_madison.rds') %>%
+all <- readRDS('./data/01_upper_madison.rds') %>%
   filter(Year < 2023)
 
 sub_stock <- 

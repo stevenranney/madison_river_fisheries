@@ -11,7 +11,7 @@ summer_prop = 0.67
 # angler_days = 58716 * .58
 # angler_days = 400000 * .58 # predicted in 2030
 angling_est <-
-  readRDS('./data/predicted_angler_pressure.rds') %>%
+  readRDS('./data/07_predicted_angler_pressure.rds') %>%
   filter(year >= 2023 & year <= 2030) %>% 
   select(year, fit, lwr, upr) %>% 
   pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
