@@ -62,7 +62,7 @@ p <-
   filter(year <= 2030) %>%
   ggplot() +
   aes(x = year, y = fit) +
-  geom_point((aes(x = year, y = angler_days)), size = 2) +
+  geom_point((aes(x = year, y = angler_days)), size = 4) +
   geom_line(aes(linetype = type), size = 1) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.3) +
   xlab("Year") +
