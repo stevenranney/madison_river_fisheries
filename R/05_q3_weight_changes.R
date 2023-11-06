@@ -36,10 +36,12 @@ p <- growth %>%
   # scale_y_continuous(limits = c(0, 1)) +
   scale_linetype_discrete(name = "PSD", 
                           labels = c("SS", 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))+
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom', 
         panel.grid.minor = element_blank(), 
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
 
 p
 
@@ -61,10 +63,12 @@ p <- growth %>%
   # scale_y_continuous(limits = c(0, 1)) +
   scale_linetype_discrete(name = "PSD", 
                           labels = c("SS", 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))+
-  theme_minimal(base_size = 20) +
+  theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom', 
         panel.grid.minor = element_blank(), 
-        panel.border = element_rect(colour = "black", fill=NA, size=1))
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
 
 p
 

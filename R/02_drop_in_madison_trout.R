@@ -74,7 +74,11 @@ p <-
   theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom',
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))#,
+        # panel.border = element_rect(colour = "black", fill=NA, size=1)
+        # panel.border = element_blank(), 
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )#,
 
 p
 
