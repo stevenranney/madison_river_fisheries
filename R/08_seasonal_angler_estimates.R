@@ -60,44 +60,47 @@ for (i in 1:nrow(angling_est)){
   angling_est$rbt_catch[i] <- sum(sim$true_catch)
 }
 
-p <- 
-  angling_est %>%
-  mutate(Brown = bnt_catch * 0.02, 
-         Rainbow = rbt_catch * 0.08) %>%
-  select(year, type, bnt_catch, rbt_catch, Brown, Rainbow) %>%
-  pivot_longer(c(Brown, Rainbow), names_to = 'species', values_to = 'mortality') %>%
-  ggplot() +
-  geom_line(
-    data = . %>% filter(type == 'fit'), 
-    aes(x = year, y = mortality, linetype = type), 
-    size = 1) +
-  geom_ribbon(
-    data = . %>% pivot_wider(names_from = type, values_from = mortality), 
-    aes(x = year, ymin = lwr, ymax = upr, fill = 'band'), 
-    # fill = 'grey', 
-    alpha = 0.5) + 
-  facet_grid(~species, scales = "free") +
-  xlab("Year") +
-  ylab('Predicted annual mortality') +
-  scale_linetype_manual(name = "",
-                        values = 'solid', 
-                        labels = "Fit"
-  ) + 
-  scale_fill_manual("", values = "grey", labels = 'Prediction interval') +
-  labs(linetype = '', fill = '') +
-  # scale_y_continuous(labels = label_comma()) +
-  theme_minimal(base_size = 30) +
-  theme(legend.position = 'bottom',
-        legend.title=element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
-  )
-
-p
-
-ggsave(paste0("output/images/08_predicted_annual_mortality.png"), plot = p, 
-       width = 16, height = 9, bg = "white")
+#####
+# Can't quite get this figure to match what I want. A table is probably better anyway
+# p <- 
+#   angling_est %>%
+#   mutate(Brown = bnt_catch * 0.02, 
+#          Rainbow = rbt_catch * 0.08) %>%
+#   select(year, type, bnt_catch, rbt_catch, Brown, Rainbow) %>%
+#   pivot_longer(c(Brown, Rainbow), names_to = 'species', values_to = 'mortality') %>%
+#   ggplot() +
+#   geom_line(
+#     data = . %>% filter(type == 'fit'), 
+#     aes(x = year, y = mortality, linetype = type), 
+#     size = 1) +
+#   geom_ribbon(
+#     data = . %>% pivot_wider(names_from = type, values_from = mortality),
+#     aes(x = year, ymin = lwr, ymax = upr), #, fill = 'band'),
+#     # fill = 'grey',
+#     # alpha = 0.5
+#     ) +
+#   facet_grid(~species, scales = "free") +
+#   xlab("Year") +
+#   ylab('Predicted annual mortality') +
+#   scale_linetype_manual(name = "",
+#                         values = 'solid', 
+#                         labels = "Fit"
+#   ) + 
+#   scale_fill_manual("", values = "grey", labels = 'Prediction interval') +
+#   labs(linetype = '', fill = '') +
+#   # scale_y_continuous(labels = label_comma()) +
+#   theme_minimal(base_size = 30) +
+#   theme(legend.position = 'bottom',
+#         legend.title=element_blank(),
+#         panel.grid.minor = element_blank(),
+#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#   )
+# 
+# p
+# 
+# ggsave(paste0("output/images/08_predicted_annual_mortality.png"), plot = p, 
+#        width = 16, height = 9, bg = "white")
 
 
 
