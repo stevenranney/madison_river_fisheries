@@ -51,7 +51,7 @@ predict_by_10mm <-
          `0.90` = "tau..0.90")
 
 predict_by_10mm %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_predicted_values.csv"),
+  write.csv(paste0("output/06_rainbow_predicted_values.csv"),
             row.names = FALSE)
 
 #-----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ all_75_diff <-
   select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
 
 all_75_diff %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_differences_in_slope_int.csv"), 
+  write.csv(paste0("output/06_rainbow_differences_in_slope_int.csv"), 
             row.names = FALSE)
 
 # Retrieve slope and intercept for each population
@@ -130,7 +130,7 @@ all_75_slope_int_est <-
   select(name, Lwr95CI, `Point estimate`, Upr95CI)
 
 all_75_slope_int_est %>%
-  write.csv(paste0("output/", Sys.Date(), "_rainbow_slope_int_estimates.csv"), 
+  write.csv(paste0("output/06_rainbow_slope_int_estimates.csv"), 
             row.names = FALSE)
 
 
@@ -185,9 +185,9 @@ predicted_output <-
     Year = Year %>% relevel(ref = "2003"))
 
 predicted_output %>%
-  saveRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
+  saveRDS(paste0("data/06_rainbow_predicted_weight_at_length.rds"))
 
-predicted_output <- readRDS(paste0("data/", Sys.Date(), "_rainbow_predicted_weight_at_length.rds"))
+predicted_output <- readRDS(paste0("data/06_rainbow_predicted_weight_at_length.rds"))
 
 ###########################################################
 p <- 
@@ -226,7 +226,7 @@ p <-
 p
 
 
-ggsave(paste0("output/images/", Sys.Date(), "_rainbow_plots_color.png"), plot = p, 
+ggsave(paste0("output/images/06_rainbow_plots_color.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 

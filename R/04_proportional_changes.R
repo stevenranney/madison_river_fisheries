@@ -45,7 +45,7 @@ p <-
 
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_proportional_changes.png"), plot = p, 
+ggsave(paste0("output/images/04_proportional_changes.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 

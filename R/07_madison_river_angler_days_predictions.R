@@ -89,7 +89,7 @@ p <-
   )
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_predicted_yearly_n_anglers.png"), plot = p, 
+ggsave(paste0("output/images/07_predicted_yearly_n_anglers.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 # all %>% 

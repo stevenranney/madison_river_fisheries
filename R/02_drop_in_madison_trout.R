@@ -82,7 +82,7 @@ p <-
 
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_drop_in_madison_trout.png"), plot = p, 
+ggsave(paste0("output/images/02_drop_in_madison_trout.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 

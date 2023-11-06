@@ -90,12 +90,13 @@ p <-
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
         panel.grid.minor = element_blank(),
-        panel.border = element_rect(colour = "black", fill=NA, size=1)
-        )
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
 
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_predicted_annual_mortality.png"), plot = p, 
+ggsave(paste0("output/images/08_predicted_annual_mortality.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 
@@ -116,7 +117,7 @@ angling_est %>%
          rbt_catch_lwr, rbt_catch_fit, rbt_catch_upr, 
          Brown_lwr, Brown_fit, Brown_upr, 
          Rainbow_lwr, Rainbow_fit, Rainbow_upr) %>%
-  write.csv(paste0("output/", Sys.Date(), "_predicted_annual_catch_mortality.csv"))
+  write.csv(paste0("output/08_predicted_annual_catch_mortality.csv"))
 
 
 

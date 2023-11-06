@@ -45,7 +45,7 @@ p <- growth %>%
 
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_q3_weights.png"), plot = p, 
+ggsave(paste0("output/images/05_q3_weights.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
 
@@ -72,6 +72,6 @@ p <- growth %>%
 
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_q2_weights.png"), plot = p, 
+ggsave(paste0("output/images/05_q2_weights.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 

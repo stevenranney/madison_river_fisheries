@@ -105,7 +105,7 @@ p <- sub_stock %>%
   
 p
 
-ggsave(paste0("output/images/", Sys.Date(), "_drop_in_recruitment.png"), plot = p, 
+ggsave(paste0("output/images/03_drop_in_recruitment.png"), plot = p, 
        width = 16, height = 9, bg = "white")
 
   
