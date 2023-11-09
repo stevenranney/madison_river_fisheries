@@ -39,5 +39,6 @@ varney %>%
   filter(month(as.Date(Date, format = "%m/%d/%Y")) %in% c(8, 9, 10)) %>%
   mutate(psd = ifelse(species == 'Brown', assign_bnt_psd(Length), 
                       ifelse(species == 'Rainbow', assign_rbt_psd(Length), NA)), 
-         psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))) %>%
+         psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T')), 
+         length_class = round_down(Length)) %>%
   saveRDS('./data/01_upper_madison.rds')

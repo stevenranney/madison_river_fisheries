@@ -33,7 +33,7 @@ reg <-
          Year < 2023) %>%
   group_by(species, Year) %>%
   summarize(n = n()/2) %>%
-  do(mod = lm(n ~ as.numeric(as.character(Year)), data = .))
+  do(mod = lm(n ~ Year, data = .))#as.numeric(as.character(Year)), data = .))
 
 print("Brown")
 summary((reg %>% filter(species == 'Brown') %>% pull(mod))[[1]])
@@ -120,3 +120,21 @@ ggsave(paste0("output/images/02_drop_in_madison_trout.png"), plot = p,
 #         panel.grid.minor = element_blank(),
 #         panel.border = element_rect(colour = "black", fill=NA, size=1))#,
 # # panel.grid.minor = element_blank())
+
+
+mod <- (reg %>% filter(species == 'Brown') %>% pull(mod))[[1]]
+
+drop_future <- data.frame(
+  Year = seq(2023, 2030, by = 1), 
+  n_individuals_rm = NA, 
+  type = 'predicted')
+drop_future
+
+predicted <-
+  cbind(drop_future, predict(mod, newdata = drop_future, interval = 'prediction', level = 0.95)) %>%
+  mutate(total = fit * 54, 
+         lwr_total = lwr * 54, 
+         upr_total = upr * 54, 
+         lower = total - lwr_total, 
+         upper = upr_total - total)
+

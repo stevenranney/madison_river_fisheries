@@ -43,7 +43,7 @@ for (i in 1:nrow(angling_est)){
 }
 
 # FOR RAINBOW TROUT
-# Catch rate = 0.52
+# Catch rate = 0.64
 for (i in 1:nrow(angling_est)){
   
   sim <- conduct_multiple_surveys(
