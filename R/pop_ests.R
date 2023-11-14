@@ -1,5 +1,11 @@
 ########################################################################
-# Chapman modification of the Lincoln-Peterson Estimator
+# Calculates Chapman modification of Lincoln-Peterson estimator by 10mm length class
+# Includes:
+# * likelihood function population estimates (from pg 337 in AIFFD) by 10mm length class with q_hat
+# from capture probability from smoothed spline estimate (Anderson 1995)
+# * likelihood function from Otis et al (1978) model M0 (explained on AIFFD 335 eq 8.8 and in the box 
+# startin on pg342)
+
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -8,29 +14,14 @@ library(lemon)
 
 d <- readRDS('./data/01_upper_madison.rds')
 
-# M.C as mark/recapture?
-
 foo <- 
   d %>% 
   filter(Year < 2023)
 
-# C/f plots
-# foo %>% 
-#   mutate(Year = as.factor(Year)) %>%
-#   group_by(Year, location, Date) %>% 
-#   summarize(
-#     catch = n(), 
-#     f_hours = unique(Shock.Time..min.)/60, 
-#     c_f = catch/f_hours) %>% 
-#   arrange(Year, location) %>% 
-#   ggplot() +
-#   aes(x = Year, y = c_f, fill = location) +
-#   geom_boxplot()
-
 
 ########################################################################
 ########################################################################
-# Rainbows 
+# Rainbow trout, both locations, all years, by 10mm length class
 
 rbt <- foo %>%
   filter(Length >= 160 & species == 'Rainbow') %>%
@@ -39,7 +30,6 @@ rbt <- foo %>%
   summarize(n = n())
 
 rbt
-
 
 rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), 41) %>% sort(), 
                       location = rep(c("Pine Butte", "Varney"), 410), 
@@ -241,6 +231,8 @@ pop_ests <-
 #   )
 
 ###################################################
+###################################################
+###################################################
 # Estimate probability of capture within length class with spline smoothing
 # Anderson 1995
 
@@ -270,12 +262,6 @@ pop_ests %>%
   )
   
   
-  
-# # estimates
-# model <- lm(obs_prop_caught ~ splines::bs(length_class), data = pop_ests)
-# model_fit <- data.frame(predict(model, se = TRUE))
-#   
-
 mods <- pop_ests %>%
   arrange(year, sp, location, length_class) %>%
   # Following removed because there was no sampling at these times/locations/species
@@ -426,60 +412,4 @@ filtered %>%
         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
   )
 
-
-
-
-
-
-
-
-
-
-###################################################
-# Applicatino of likelihood functions in pop estimation AIFFD pg 337
-
-# n = 20
-# N = 60
-# q = .4
-# 
-# n_hat <- 
-#   (
-#   factorial(N)
-#   /(
-#     factorial(n)*factorial(N-n)
-#   )
-# )*(
-#   q^(n)*(1-q)^(N-n)
-# )
-# 
-# n_hat
-# 
-# log_n_hat <- 
-#   (
-#     lfactorial(N)
-#     /(
-#       lfactorial(n)*lfactorial(N-n)
-#     )
-#   )*(
-#     log(q^(n)*(1-q)^(N-n))
-#   )
-# 
-# log_n_hat
-# 
-# exp(log_n_hat)
-
-
-
-
-
-
-
-# boo <- data.frame(N = N, n_hat = n_hat)
-# 
-# boo %>% filter(n_hat == max(n_hat, na.rm = T))
-#   
-# boo %>% 
-#   ggplot() +
-#   aes(x = N, y = n_hat) + 
-#   geom_line()
 
