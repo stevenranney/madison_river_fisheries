@@ -1,0 +1,613 @@
+########################################################################
+# Calculates Chapman modification of Lincoln-Peterson estimator by 10mm length class
+# and length category (Gablehouse 198?)
+
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(lemon)
+
+source('./R/00_helper_functions.R')
+
+d <- readRDS('./data/01_upper_madison.rds')
+
+foo <- 
+  d %>% 
+  filter(Year < 2023)
+
+
+# Calculates Chapman estimator Nhat
+calc_chapman_nhat <- function(n1, n2, m2){
+  
+  n <- ((n1 + 1)*(n2+1))/(m2+1) -1
+  return(n)
+}
+
+# calculates Chapman estimator variance
+calc_chapman_var <- function(n1, n2, m2){
+  var <- 
+    ((
+      (n1+1)*(n2+1)*(n1-m2)*(n2-m2)
+    )/
+      (
+        ((m2+1)^2)*(m2+2)
+      )) - 1
+  
+  return(var)
+}
+
+# Bootstraps Chapman estimator confidence intervals
+calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
+  cis <- unname(
+    quantile(calc_chapman_nhat(n1, n2, rbinom(boots, n2, m2/n2)), 
+             probs = c((1-conf)/2, 1-(1-conf)/2), na.rm = TRUE
+    ))
+  return(cis)
+}
+
+
+########################################################################
+########################################################################
+# Rainbow trout, both locations, all years, by 10mm length class
+
+rbt <- foo %>%
+  filter(
+    # Length >= 160 &
+      species == 'Rainbow') %>%
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+  group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
+  summarize(n = n())
+
+rbt
+
+rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), 52) %>% sort(), 
+                      location = rep(c("Pine Butte", "Varney"), 520), 
+                      sp = 'Rainbow', 
+                      length_class = rep(rbt$length_class %>% unique(), 20),
+                      t = NA,
+                      n_marked = NA,
+                      n_caught = NA, 
+                      n_recap = NA,
+                      n_hat = NA, 
+                      ci = NA)
+
+
+
+for (y in rbt$Year %>% unique()){
+  for (l in rbt$location %>% unique()){
+    for (lc in rbt$length_class %>% unique()){
+      
+      t  <- # number caught in first sampling (i.e., marking) period
+        rbt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
+        pull(Date) %>% 
+        unique() %>%
+        length()
+      
+      n1 <- # number caught in first sampling (i.e., marking) period
+        rbt %>% filter(Trip.Type == 'M' & Year == y & location == l & length_class == lc) %>%
+        pull(n) %>% 
+        sum()
+      
+      n2 <- # number caught in second sampling (i.e., recapture) period
+        rbt %>% filter(Trip.Type == 'R' & Year == y & location == l & length_class == lc) %>% 
+        pull(n) %>% 
+        sum()
+      
+      m2 <- # number of marked animals caught in second sampling period
+        rbt %>% 
+        filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & length_class == lc) %>% 
+        pull(n) %>% 
+        sum()
+      
+      estimate <- calc_chapman_nhat(n1, n2, m2)
+      
+      variance <- calc_chapman_var(n1, n2, m2)
+      
+      ci <- 1.96*sqrt(variance)
+      
+      boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
+      
+      
+      rbt_est$t[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- t
+      rbt_est$n_marked[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- n1
+      rbt_est$n_caught[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- n2
+      rbt_est$n_recap[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- m2
+      #Chapman modification of Lincoln-Peterson
+      rbt_est$n_hat[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- estimate
+      rbt_est$ci[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- ci
+      rbt_est$boot_ci_low[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- boot_ci[[1]]
+      rbt_est$boot_ci_upr[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- boot_ci[[2]]
+      
+      
+    }
+  }
+}
+
+########################################################################
+# Browns 
+
+bnt <- foo %>%
+  filter(
+    # Length >= 160 & 
+      species == 'Brown') %>%
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+  group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
+  summarize(n = n())
+
+bnt
+
+
+bnt_est <- data.frame(year = rep(bnt$Year %>% unique(), 64) %>% sort(), 
+                      location = rep(c("Pine Butte", "Varney"), 640), 
+                      sp = 'Brown', 
+                      length_class = rep(bnt$length_class %>% unique(), 20), 
+                      t = NA,
+                      n_marked = NA,
+                      n_caught = NA, 
+                      n_recap = NA,
+                      n_hat = NA, 
+                      ci = NA
+                      
+)
+
+
+
+
+for (y in bnt$Year %>% unique()){
+  for (l in bnt$location %>% unique()){
+    for (lc in bnt$length_class %>% unique()){
+      
+      t  <- # number caught in first sampling (i.e., marking) period
+        bnt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
+        pull(Date) %>% 
+        unique() %>%
+        length()
+      
+      
+      n1 <- # number caught in first sampling (i.e., marking) period
+        bnt %>% filter(Trip.Type == 'M' & Year == y & location == l & length_class == lc) %>%
+        pull(n) %>% 
+        sum()
+      
+      n2 <- # number caught in second sampling (i.e., recapture) period
+        bnt %>% filter(Trip.Type == 'R' & Year == y & location == l & length_class == lc) %>% 
+        pull(n) %>% 
+        sum()
+      
+      m2 <- # number of marked animals caught in second sampling period
+        bnt %>% 
+        filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & length_class == lc) %>% 
+        pull(n) %>% 
+        sum()
+      
+      estimate <- calc_chapman_nhat(n1, n2, m2)
+      
+      variance <- calc_chapman_var(n1, n2, m2)
+
+      ci <- 1.96*sqrt(variance)
+      
+      boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
+      
+      bnt_est$t[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- t
+      bnt_est$n_marked[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- n1
+      bnt_est$n_caught[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- n2
+      bnt_est$n_recap[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- m2
+      #Chapman modification of Lincoln-Peterson
+      bnt_est$n_hat[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- estimate
+      bnt_est$ci[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- ci
+      bnt_est$boot_ci_low[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- boot_ci[[1]]
+      bnt_est$boot_ci_upr[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- boot_ci[[2]]
+      
+      
+    }
+  }
+}
+
+
+
+###############
+# rbind rbt_est and bnt_est
+
+pop_ests_length_class <- 
+  rbt_est %>%
+  rbind(bnt_est) %>%
+  mutate(psd = ifelse(sp == 'Brown', assign_bnt_psd(length_class), 
+                      ifelse(sp == 'Rainbow', assign_rbt_psd(length_class), NA)), 
+         psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))
+  )
+
+length_class_mods <- 
+  pop_ests_length_class %>%
+  group_by(year, location, sp) %>%
+  summarize(n_hat = sum(n_hat, na.rm = T), 
+            lower = sum(boot_ci_low, na.rm = T), 
+            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  ungroup() %>%
+  group_by(location, sp) %>%
+  do(mod = lm(year ~ n_hat, data = .))
+
+for (i in 1:nrow(length_class_mods)){
+  # print(length_class_mods$location[[i]], length_class_mods$sp[[i]])
+  
+  print(summary(length_class_mods$mod[[i]]))
+}
+
+
+# plotted population estimates
+p <- 
+  pop_ests_length_class %>%
+  filter(n_hat > 0) %>%
+  group_by(year, location, sp) %>%
+  summarize(n_hat = sum(n_hat, na.rm = T), 
+            lower = sum(boot_ci_low, na.rm = T), 
+            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  ggplot() +
+  geom_point(aes(x = year, y = n_hat), size = 3) +
+  geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
+                linetype = 2, linewidth = 0.5) +#,
+                # linetype = "1", colour = 'black', linewidth = 0.75)) +
+  # geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
+  geom_smooth(aes(x = year, y = n_hat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
+  # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+  facet_rep_grid(location~sp) +
+  xlab('Year') +
+  ylab(expression("Population estimate ("~hat("N")~")")) +
+  # labs(title = expression(hat("N")~ "by 10mm length class")) +
+  # labs(shape = "", linetype = '', point = "") +
+  # scale_y_continuous(labels = label_comma()) +
+  theme_minimal(base_size = 30) +
+  theme(legend.position = 'bottom',
+        legend.title=element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.border = element_rect(colour = "black", fill=NA, size=1)
+        # panel.border = element_blank(),
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
+
+p
+
+ggsave(paste0("output/images/02_population_estimates.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
+
+
+# Length category
+
+# plotted population estimates
+q <- 
+  pop_ests_length_class %>%
+  filter(n_hat > 0) %>%
+  group_by(year, location, sp, psd) %>%
+  summarize(n_hat = sum(n_hat, na.rm = T), 
+            lower = sum(boot_ci_low, na.rm = T), 
+            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  ggplot() +
+  aes(colour = psd) +
+  geom_point(aes(x = year, y = n_hat), size = 3) +
+  # geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
+  #               linetype = 2, linewidth = 0.5) +#,
+  geom_smooth(aes(x = year, y = n_hat, linetype = psd), se = FALSE, method = 'lm', formula = y~x) +
+  # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+  facet_rep_grid(location~sp) +
+  xlab('Year') +
+  ylab(expression("Population estimate ("~hat("N")~")")) +
+  # labs(title = expression(hat("N")~ "by 10mm length class")) +
+  # labs(shape = "", linetype = '', point = "") +
+  # scale_y_continuous(labels = label_comma()) +
+  theme_minimal(base_size = 30) +
+  theme(legend.position = 'bottom',
+        legend.title=element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.border = element_rect(colour = "black", fill=NA, size=1)
+        # panel.border = element_blank(),
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
+
+q
+
+ggsave(paste0("output/images/02_population_estimates_length_cagtegory.png"), plot = p, 
+       width = 16, height = 9, bg = "white")
+
+
+########################################################################
+########################################################################
+# NOW BY LENGTH CATEGORY
+# Rainbow trout, both locations, all years, by 10mm length class
+
+# rbt <- foo %>%
+#   filter(
+#     # Length >= 160 & 
+#       species == 'Rainbow') %>%
+#   mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+#   group_by(Year, location, Date, Trip.Type, M.C, psd) %>%
+#   summarize(n = n())
+# 
+# rbt
+# 
+# rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), 4) %>% sort(), 
+#                       location = rep(c("Pine Butte", "Varney"), 40), 
+#                       sp = 'Rainbow', 
+#                       psd = rep(rbt$psd %>% unique(), 20),
+#                       t = NA,
+#                       n_marked = NA,
+#                       n_caught = NA, 
+#                       n_recap = NA,
+#                       n_hat = NA, 
+#                       ci = NA)
+# 
+# 
+# 
+# for (y in rbt$Year %>% unique()){
+#   for (l in rbt$location %>% unique()){
+#     for (lc in rbt$psd %>% unique()){
+#       
+#       t  <- # number caught in first sampling (i.e., marking) period
+#         rbt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
+#         pull(Date) %>% 
+#         unique() %>%
+#         length()
+#       
+#       n1 <- # number caught in first sampling (i.e., marking) period
+#         rbt %>% filter(Trip.Type == 'M' & Year == y & location == l & psd == lc) %>%
+#         pull(n) %>% 
+#         sum()
+#       
+#       n2 <- # number caught in second sampling (i.e., recapture) period
+#         rbt %>% filter(Trip.Type == 'R' & Year == y & location == l & psd == lc) %>% 
+#         pull(n) %>% 
+#         sum()
+#       
+#       m2 <- # number of marked animals caught in second sampling period
+#         rbt %>% 
+#         filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & psd == lc) %>% 
+#         pull(n) %>% 
+#         sum()
+#       
+#       estimate <- calc_chapman_nhat(n1, n2, m2)
+#       
+#       variance <- calc_chapman_var(n1, n2, m2)
+#       
+#       ci <- 1.96*sqrt(variance)
+#       
+#       boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
+#       
+#       rbt_est$t[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- t
+#       rbt_est$n_marked[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- n1
+#       rbt_est$n_caught[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- n2
+#       rbt_est$n_recap[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- m2
+#       #Chapman modification of Lincoln-Peterson
+#       rbt_est$n_hat[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- estimate
+#       rbt_est$ci[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- ci
+#       rbt_est$boot_ci_low[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- boot_ci[[1]]
+#       rbt_est$boot_ci_upr[which(rbt_est$year == y & rbt_est$location == l & rbt_est$psd == lc)] <- boot_ci[[2]]
+#       
+#     }
+#   }
+# }
+# ########################################################################
+# # Browns 
+# 
+# bnt <- foo %>%
+#   filter(
+#     # Length >= 160 & 
+#       species == 'Brown') %>%
+#   mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+#   group_by(Year, location, Date, Trip.Type, M.C, psd) %>%
+#   summarize(n = n())
+# 
+# bnt
+# 
+# 
+# bnt_est <- data.frame(year = rep(bnt$Year %>% unique(), 5) %>% sort(), 
+#                       location = rep(c("Pine Butte", "Varney"), 50), 
+#                       sp = 'Brown', 
+#                       psd = rep(bnt$psd %>% unique(), 20), 
+#                       t = NA,
+#                       n_marked = NA,
+#                       n_caught = NA, 
+#                       n_recap = NA,
+#                       n_hat = NA, 
+#                       ci = NA
+#                       
+# )
+# 
+# 
+# for (y in bnt$Year %>% unique()){
+#   for (l in bnt$location %>% unique()){
+#     for (lc in bnt$psd %>% unique()){
+#       
+#       t  <- # number caught in first sampling (i.e., marking) period
+#         bnt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
+#         pull(Date) %>% 
+#         unique() %>%
+#         length()
+#       
+#       
+#       n1 <- # number caught in first sampling (i.e., marking) period
+#         bnt %>% filter(Trip.Type == 'M' & Year == y & location == l & psd == lc) %>%
+#         pull(n) %>% 
+#         sum()
+#       
+#       n2 <- # number caught in second sampling (i.e., recapture) period
+#         bnt %>% filter(Trip.Type == 'R' & Year == y & location == l & psd == lc) %>% 
+#         pull(n) %>% 
+#         sum()
+#       
+#       m2 <- # number of marked animals caught in second sampling period
+#         bnt %>% 
+#         filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & psd == lc) %>% 
+#         pull(n) %>% 
+#         sum()
+# 
+#       estimate <- calc_chapman_nhat(n1, n2, m2)
+#       
+#       variance <- calc_chapman_var(n1, n2, m2)
+#       
+#       ci <- 1.96*sqrt(variance)
+#       
+#       boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
+#       
+#       bnt_est$t[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- t
+#       bnt_est$n_marked[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- n1
+#       bnt_est$n_caught[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- n2
+#       bnt_est$n_recap[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- m2
+#       #Chapman modification of Lincoln-Peterson
+#       bnt_est$n_hat[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- estimate
+#       bnt_est$ci[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- ci
+#       bnt_est$boot_ci_low[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- boot_ci[[1]]
+#       bnt_est$boot_ci_upr[which(bnt_est$year == y & bnt_est$location == l & bnt_est$psd == lc)] <- boot_ci[[2]]
+#       
+#     }
+#   }
+# }
+# 
+# # plotted population estimates
+# # bnt_est %>%
+# #   group_by(year, location) %>%
+# #   summarize(yearly_est = sum(est, na.rm = T)) %>%
+# #   ggplot() +
+# #   geom_point(aes(x = year, y = yearly_est), size = 3) +
+# #   geom_errorbar(aes(x = year, ymin = est-ci))
+# #   facet_grid(~location) +
+# #   geom_smooth(method = 'lm', formula = y ~ splines::bs(x), se = FALSE) +
+# #   xlab('Year') +
+# #   ylab(expression("Population estimate ("~hat("N")~")")) +
+# #   labs(title = "Not stratified by 10mm length class") +
+# #   # labs(shape = "", linetype = '', point = "") +
+# #   # scale_y_continuous(labels = label_comma()) +
+# #   theme_minimal(base_size = 30) +
+# #   theme(legend.position = 'bottom',
+# #         legend.title=element_blank(),
+# #         panel.grid.minor = element_blank(),
+# #         # panel.border = element_rect(colour = "black", fill=NA, size=1)
+# #         # panel.border = element_blank(), 
+# #         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+# #         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+# #   )
+# 
+# 
+# 
+# ###############
+# # rbind rbt_est and bnt_est
+# 
+# pop_est_length_cat <- 
+#   rbt_est %>%
+#   rbind(bnt_est)
+# 
+# length_cat_mods <- 
+#   pop_est_length_cat %>%
+#   group_by(year, location, sp) %>%
+#   summarize(n_hat = sum(n_hat, na.rm = T), 
+#             lower = sum(boot_ci_low, na.rm = T), 
+#             upper = sum(boot_ci_upr, na.rm = T)) %>%
+#   ungroup() %>%
+#   group_by(location, sp) %>%
+#   do(mod = lm(year ~ n_hat, data = .))
+# 
+# for (i in 1:nrow(length_cat_mods)){
+#   print(summary(length_cat_mods$mod[[i]]))
+# }
+# 
+# 
+# # plotted population estimates
+# pop_est_length_cat %>%
+#   filter(n_hat > 0) %>%
+#   group_by(year, location, sp) %>%
+#   summarize(n_hat = sum(n_hat, na.rm = T)) %>%
+#   ggplot() +
+#   geom_point(aes(x = year, y = n_hat), size = 3) +
+#   # geom_errorbar(aes(x = year, ymin = est - ci, ymax = est + ci),
+#   #               linetype = "1", colour = 'black', linewidth = 0.75)) +
+#   geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
+#   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+#   facet_rep_grid(location~sp) +
+#   xlab('Year') +
+#   ylab(expression("Population estimate ("~hat("N")~")")) +
+#   labs(title = expression(hat("N")~ "by length category (Gablehouse 1984)")) +
+#   # labs(shape = "", linetype = '', point = "") +
+#   # scale_y_continuous(labels = label_comma()) +
+#   theme_minimal(base_size = 30) +
+#   theme(legend.position = 'bottom',
+#         legend.title=element_blank(),
+#         panel.grid.minor = element_blank(),
+#         # panel.border = element_rect(colour = "black", fill=NA, size=1)
+#         # panel.border = element_blank(),
+#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#   )
+# 
+# 
+# 
+# # plotted population estimates
+# pop_est_length_cat %>%
+#   filter(n_hat > 0) %>%
+#   group_by(year, location, sp, psd) %>%
+#   summarize(n_hat = sum(n_hat, na.rm = T)) %>%
+#   ggplot() +
+#   geom_point(aes(x = year, y = n_hat, shape = psd), size = 3) +
+#   # geom_errorbar(aes(x = year, ymin = est - ci, ymax = est + ci),
+#   #               linetype = "1", colour = 'black', linewidth = 0.75)) +
+#   geom_smooth(aes(x = year, y = n_hat, linetype = psd), se = FALSE, method = 'loess') +
+#   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+#   facet_rep_grid(location~sp) +
+#   xlab('Year') +
+#   ylab(expression("Population estimate ("~hat("N")~")")) +
+#   labs(title = expression(hat("N")~ "by length category (Gablehouse 1084)")) +
+#   # labs(shape = "", linetype = '', point = "") +
+#   # scale_y_continuous(labels = label_comma()) +
+#   theme_minimal(base_size = 30) +
+#   theme(legend.position = 'bottom',
+#         legend.title=element_blank(),
+#         # legend.title = element_text(size = 15), 
+#         legend.text = element_text(size = 15),
+#         panel.grid.minor = element_blank(),
+#         # panel.border = element_rect(colour = "black", fill=NA, size=1)
+#         # panel.border = element_blank(),
+#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#   ) +
+#   guides(shape = guide_legend(override.aes = list(size = 5)), 
+#          color = guide_legend(override.aes = list(size = 5)), 
+#          linetype = guide_legend(override.aes = list(size = 5))
+#   )
+
+
+
+##########################
+# time difference between mark/recapture runs
+
+d %>% 
+  group_by(Year, location, Trip.Type) %>% 
+  summarize(n_dates = n_distinct(Date)) %>% 
+  ggplot() + 
+  aes(x = Year, y = n_dates) + 
+  geom_point() + 
+  geom_line() + 
+  facet_rep_grid(Trip.Type~location)
+
+d %>% 
+  group_by(Year, location, Trip.Type) %>% 
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+  summarize(n_dates = n_distinct(Date), 
+            start = min(Date), 
+            end = max(Date)
+            ) %>%
+  mutate(delta_days = as.numeric(start - lag(end))) %>%
+  ungroup() %>%
+  summarize(mean_delta = mean(delta_days, na.rm = T), 
+            sd_delta = sd(delta_days, na.rm = T))
+
+d %>% 
+  group_by(Year, location, Trip.Type) %>% 
+  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
+  summarize(n_dates = n_distinct(Date), 
+            start = min(Date), 
+            end = max(Date)
+  ) %>%
+  mutate(delta_days = as.numeric(start - lag(end))) %>%
+  ggplot() +
+  aes(x = delta_days) +
+  geom_histogram(binwidth = 1)
+
