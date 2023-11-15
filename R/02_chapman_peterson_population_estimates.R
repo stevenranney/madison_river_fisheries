@@ -53,6 +53,7 @@ calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
 rbt <- foo %>%
   filter(
     # Length >= 160 &
+    # psd != 'SS' &
       species == 'Rainbow') %>%
   mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
   group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
@@ -60,8 +61,11 @@ rbt <- foo %>%
 
 rbt
 
-rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), 52) %>% sort(), 
-                      location = rep(c("Pine Butte", "Varney"), 520), 
+times <- rbt$length_class %>% unique() %>% length()
+
+
+rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), times) %>% sort(), 
+                      location = rep(c("Pine Butte", "Varney"), times*10), 
                       sp = 'Rainbow', 
                       length_class = rep(rbt$length_class %>% unique(), 20),
                       t = NA,
@@ -129,6 +133,7 @@ for (y in rbt$Year %>% unique()){
 bnt <- foo %>%
   filter(
     # Length >= 160 & 
+    # psd != "SS" &
       species == 'Brown') %>%
   mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
   group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
@@ -136,9 +141,11 @@ bnt <- foo %>%
 
 bnt
 
+times <- bnt$length_class %>% unique() %>% length()
 
-bnt_est <- data.frame(year = rep(bnt$Year %>% unique(), 64) %>% sort(), 
-                      location = rep(c("Pine Butte", "Varney"), 640), 
+
+bnt_est <- data.frame(year = rep(bnt$Year %>% unique(), times) %>% sort(), 
+                      location = rep(c("Pine Butte", "Varney"), times*10), 
                       sp = 'Brown', 
                       length_class = rep(bnt$length_class %>% unique(), 20), 
                       t = NA,
@@ -226,8 +233,10 @@ length_class_mods <-
   group_by(location, sp) %>%
   do(mod = lm(year ~ n_hat, data = .))
 
+length_class_mods 
+
 for (i in 1:nrow(length_class_mods)){
-  # print(length_class_mods$location[[i]], length_class_mods$sp[[i]])
+  print(c(length_class_mods$sp[[i]], length_class_mods$location[[i]]))
   
   print(summary(length_class_mods$mod[[i]]))
 }
@@ -277,6 +286,7 @@ ggsave(paste0("output/images/02_population_estimates.png"), plot = p,
 # plotted population estimates
 q <- 
   pop_ests_length_class %>%
+  # filter(sp == 'Brown') %>%
   filter(n_hat > 0) %>%
   group_by(year, location, sp, psd) %>%
   summarize(n_hat = sum(n_hat, na.rm = T), 
@@ -307,7 +317,7 @@ q <-
 
 q
 
-ggsave(paste0("output/images/02_population_estimates_length_cagtegory.png"), plot = p, 
+ggsave(paste0("output/images/02_population_estimates_length_cagtegory.png"), plot = q, 
        width = 16, height = 9, bg = "white")
 
 
