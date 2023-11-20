@@ -242,6 +242,77 @@ for (i in 1:nrow(length_class_mods)){
 }
 
 
+###################################################
+# Function to return N_hat by maximum likelihood
+# uses the Nhat from Chapman and the observed catchability 
+# to find MLE of Nhat
+
+get_mle_catchability <- function(n, N){
+  q <- seq(0, 1, 0.01)
+  
+  d <- data.frame(q) %>%
+    mutate(L = dbinom(n, N, q))
+  
+  return(d %>% filter(L == max(L)) %>% pull(q))
+  
+}
+
+get_mle_nhat <- function(n, prop){
+  
+  size <- seq(n, 100*(n+1), by = 1)
+  
+  d <- data.frame(size = size) %>%
+    mutate(L = dbinom(n, size, prop))
+  
+  return(d %>% filter(L == max(L)) %>% pull(size) %>% max())
+}
+
+pop_ests_length_class <- 
+  pop_ests_length_class %>%
+  rowwise() %>%
+  mutate(mle_nhat = get_mle_nhat(n_recap, n_recap/n_caught))
+
+pop_ests_length_class %>% 
+  filter(mle_nhat > 0) %>%
+  group_by(year, location, sp) %>%
+  summarize(mle_nhat = sum(mle_nhat, na.rm = T), 
+            lower = sum(boot_ci_low, na.rm = T), 
+            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  ggplot() +
+  geom_point(aes(x = year, y = mle_nhat), size = 3) +
+  # geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
+  #               linetype = 2, linewidth = 0.5) +#,
+  # linetype = "1", colour = 'black', linewidth = 0.75)) +
+  # geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
+  geom_smooth(aes(x = year, y = mle_nhat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
+  # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+  facet_rep_grid(location~sp) +
+  xlab('Year') +
+  ylab(expression("Population estimate ("~hat("N")~")")) +
+  # labs(title = expression(hat("N")~ "by 10mm length class")) +
+  # labs(shape = "", linetype = '', point = "") +
+  # scale_y_continuous(labels = label_comma()) +
+  theme_minimal(base_size = 30) +
+  theme(legend.position = 'bottom',
+        legend.title=element_blank(),
+        panel.grid.minor = element_blank(),
+        # panel.border = element_rect(colour = "black", fill=NA, size=1)
+        # panel.border = element_blank(),
+        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+  )
+
+
+
+
+
+
+
+
+
+
+
+
 # plotted population estimates
 p <- 
   pop_ests_length_class %>%
