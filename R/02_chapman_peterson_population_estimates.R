@@ -47,178 +47,45 @@ calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
 
 
 ########################################################################
-########################################################################
-# Rainbow trout, both locations, all years, by 10mm length class
-
-rbt <- foo %>%
-  filter(
-    # Length >= 160 &
-    # psd != 'SS' &
-      species == 'Rainbow') %>%
+counts <- 
+  foo %>%   
   mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
-  group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
+  group_by(species, Year, location, Date, Trip.Type, M.C, length_class) %>%
   summarize(n = n())
-
-rbt
-
-times <- rbt$length_class %>% unique() %>% length()
-
-
-rbt_est <- data.frame(year = rep(rbt$Year %>% unique(), times) %>% sort(), 
-                      location = rep(c("Pine Butte", "Varney"), times*10), 
-                      sp = 'Rainbow', 
-                      length_class = rep(rbt$length_class %>% unique(), 20),
-                      t = NA,
-                      n_marked = NA,
-                      n_caught = NA, 
-                      n_recap = NA,
-                      n_hat = NA, 
-                      ci = NA)
-
-
-
-for (y in rbt$Year %>% unique()){
-  for (l in rbt$location %>% unique()){
-    for (lc in rbt$length_class %>% unique()){
-      
-      t  <- # number caught in first sampling (i.e., marking) period
-        rbt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
-        pull(Date) %>% 
-        unique() %>%
-        length()
-      
-      n1 <- # number caught in first sampling (i.e., marking) period
-        rbt %>% filter(Trip.Type == 'M' & Year == y & location == l & length_class == lc) %>%
-        pull(n) %>% 
-        sum()
-      
-      n2 <- # number caught in second sampling (i.e., recapture) period
-        rbt %>% filter(Trip.Type == 'R' & Year == y & location == l & length_class == lc) %>% 
-        pull(n) %>% 
-        sum()
-      
-      m2 <- # number of marked animals caught in second sampling period
-        rbt %>% 
-        filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & length_class == lc) %>% 
-        pull(n) %>% 
-        sum()
-      
-      estimate <- calc_chapman_nhat(n1, n2, m2)
-      
-      variance <- calc_chapman_var(n1, n2, m2)
-      
-      ci <- 1.96*sqrt(variance)
-      
-      boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
-      
-      
-      rbt_est$t[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- t
-      rbt_est$n_marked[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- n1
-      rbt_est$n_caught[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- n2
-      rbt_est$n_recap[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- m2
-      #Chapman modification of Lincoln-Peterson
-      rbt_est$n_hat[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- estimate
-      rbt_est$ci[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- ci
-      rbt_est$boot_ci_low[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- boot_ci[[1]]
-      rbt_est$boot_ci_upr[which(rbt_est$year == y & rbt_est$location == l & rbt_est$length_class == lc)] <- boot_ci[[2]]
-      
-      
-    }
-  }
-}
-
-########################################################################
-# Browns 
-
-bnt <- foo %>%
-  filter(
-    # Length >= 160 & 
-    # psd != "SS" &
-      species == 'Brown') %>%
-  mutate(Date = as.Date(Date, format = "%m/%d/%Y")) %>%
-  group_by(Year, location, Date, Trip.Type, M.C, length_class) %>%
-  summarize(n = n())
-
-bnt
-
-times <- bnt$length_class %>% unique() %>% length()
-
-
-bnt_est <- data.frame(year = rep(bnt$Year %>% unique(), times) %>% sort(), 
-                      location = rep(c("Pine Butte", "Varney"), times*10), 
-                      sp = 'Brown', 
-                      length_class = rep(bnt$length_class %>% unique(), 20), 
-                      t = NA,
-                      n_marked = NA,
-                      n_caught = NA, 
-                      n_recap = NA,
-                      n_hat = NA, 
-                      ci = NA
-                      
-)
-
-
-
-
-for (y in bnt$Year %>% unique()){
-  for (l in bnt$location %>% unique()){
-    for (lc in bnt$length_class %>% unique()){
-      
-      t  <- # number caught in first sampling (i.e., marking) period
-        bnt %>% filter(Trip.Type == 'R' & Year == y & location == l) %>%
-        pull(Date) %>% 
-        unique() %>%
-        length()
-      
-      
-      n1 <- # number caught in first sampling (i.e., marking) period
-        bnt %>% filter(Trip.Type == 'M' & Year == y & location == l & length_class == lc) %>%
-        pull(n) %>% 
-        sum()
-      
-      n2 <- # number caught in second sampling (i.e., recapture) period
-        bnt %>% filter(Trip.Type == 'R' & Year == y & location == l & length_class == lc) %>% 
-        pull(n) %>% 
-        sum()
-      
-      m2 <- # number of marked animals caught in second sampling period
-        bnt %>% 
-        filter(Trip.Type == 'R' & M.C == 1 & Year == y & location == l & length_class == lc) %>% 
-        pull(n) %>% 
-        sum()
-      
-      estimate <- calc_chapman_nhat(n1, n2, m2)
-      
-      variance <- calc_chapman_var(n1, n2, m2)
-
-      ci <- 1.96*sqrt(variance)
-      
-      boot_ci <- calc_chapman_bootstrap_ci(n1, n2, m2)
-      
-      bnt_est$t[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- t
-      bnt_est$n_marked[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- n1
-      bnt_est$n_caught[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- n2
-      bnt_est$n_recap[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- m2
-      #Chapman modification of Lincoln-Peterson
-      bnt_est$n_hat[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- estimate
-      bnt_est$ci[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- ci
-      bnt_est$boot_ci_low[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- boot_ci[[1]]
-      bnt_est$boot_ci_upr[which(bnt_est$year == y & bnt_est$location == l & bnt_est$length_class == lc)] <- boot_ci[[2]]
-      
-      
-    }
-  }
-}
-
-
-
-###############
-# rbind rbt_est and bnt_est
 
 pop_ests_length_class <- 
-  rbt_est %>%
-  rbind(bnt_est) %>%
-  mutate(psd = ifelse(sp == 'Brown', assign_bnt_psd(length_class), 
+  counts %>%
+  group_by(species, Year, location, length_class) %>%
+  filter(Trip.Type == 'M') %>%
+  summarize(n1 = sum(n, na.rm = T)) %>%
+  full_join(
+    counts %>% 
+      group_by(species, Year, location, length_class) %>%
+      filter(Trip.Type == 'R') %>%
+      summarize(n2 = sum(n, na.rm = T))
+  ) %>% 
+  full_join(
+    counts %>% 
+      group_by(species, Year, location, length_class) %>%
+      filter(Trip.Type == 'R' & M.C == 1) %>%
+      summarize(m2 = sum(n, na.rm = T))
+  ) %>%
+  full_join(
+    counts %>% 
+      group_by(species, Year, location) %>%
+      filter(Trip.Type == 'R') %>%
+      summarize(t = n_distinct(Date))
+  ) %>%
+  ungroup() %>%
+  mutate(n1 = ifelse(is.na(n1), 0, n1), 
+         n2 = ifelse(is.na(n2), 0, n2), 
+         m2 = ifelse(is.na(m2), 0, m2)) %>%
+  group_by(species, Year, location, length_class) %>%
+  mutate(chapman_nhat = calc_chapman_nhat(n1, n2, m2), 
+         chapman_ci = 1.96*sqrt(calc_chapman_var(n1, n2, m2)), 
+         boot_ci_low = calc_chapman_bootstrap_ci(n1, n2, m2)[[1]], 
+         boot_ci_upr = calc_chapman_bootstrap_ci(n1, n2, m2)[[2]], 
+         psd = ifelse(sp == 'Brown', assign_bnt_psd(length_class), 
                       ifelse(sp == 'Rainbow', assign_rbt_psd(length_class), NA)), 
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))
   )
