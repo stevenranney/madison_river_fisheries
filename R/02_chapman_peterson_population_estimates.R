@@ -13,6 +13,16 @@ d <-
   readRDS('./data/01_upper_madison.rds') %>%
   filter(species %in% c("Brown", "Rainbow"))
 
+section_length <-
+  d %>% 
+  select(location, Section.Length) %>% 
+  unique() %>%
+  mutate(length = as.numeric(gsub("m", "", Section.Length)), 
+         length_km = length/1000, 
+         length_mi = length/1609)
+
+section_length
+
 foo <- 
   d %>% 
   filter(Year < 2023)
@@ -97,15 +107,27 @@ pop_ests_length_class <-
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))
   )
 
+
 length_class_mods <- 
   pop_ests_length_class %>%
   group_by(year, location, sp) %>%
   summarize(n_hat = sum(n_hat, na.rm = T), 
             lower = sum(boot_ci_low, na.rm = T), 
             upper = sum(boot_ci_upr, na.rm = T)) %>%
+  full_join(
+    section_length %>%
+      select(location, length_km, length_mi)
+  ) %>%
+  mutate(n_hat_km = n_hat/length_km, 
+         lower_km = lower/length_km, 
+         upper_km = upper/length_km, 
+         n_hat_mi = n_hat/length_mi, 
+         lower_mi = lower/length_mi, 
+         upper_mi = upper/length_mi, 
+  ) %>%
   ungroup() %>%
   group_by(location, sp) %>%
-  do(mod = lm(year ~ n_hat, data = .))
+  do(mod = lm(year ~ n_hat_km, data = .))
 
 length_class_mods 
 
@@ -146,26 +168,63 @@ pop_ests_length_class <-
   rowwise() %>%
   mutate(mle_nhat = get_mle_nhat(m2, m2/n2))
 
-pop_ests_length_class %>% 
-  filter(mle_nhat > 0) %>%
+# plot using MLE estimator
+# pop_ests_length_class %>% 
+#   filter(mle_nhat > 0) %>%
+#   group_by(year, location, sp) %>%
+#   summarize(mle_nhat = sum(mle_nhat, na.rm = T), 
+#             lower = sum(boot_ci_low, na.rm = T), 
+#             upper = sum(boot_ci_upr, na.rm = T)) %>%
+#   ggplot() +
+#   geom_point(aes(x = year, y = mle_nhat), size = 3) +
+#   geom_errorbar(aes(x = year, ymin = lower, ymax = upper),
+#                 linetype = 2, linewidth = 0.5) +#,
+#   # linetype = "1", colour = 'black', linewidth = 0.75)) +
+#   # geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
+#   geom_smooth(aes(x = year, y = mle_nhat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
+#   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+#   facet_rep_grid(location~sp) +
+#   xlab('Year') +
+#   ylab(expression("Population estimate ("~hat("N")~")")) +
+#   # labs(title = expression(hat("N")~ "by 10mm length class")) +
+#   # labs(shape = "", linetype = '', point = "") +
+#   # scale_y_continuous(labels = label_comma()) +
+#   theme_minimal(base_size = 30) +
+#   theme(legend.position = 'bottom',
+#         legend.title=element_blank(),
+#         panel.grid.minor = element_blank(),
+#         # panel.border = element_rect(colour = "black", fill=NA, size=1)
+#         # panel.border = element_blank(),
+#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+#   )
+
+per_km <- 
+  pop_ests_length_class %>%
   group_by(year, location, sp) %>%
-  summarize(mle_nhat = sum(mle_nhat, na.rm = T), 
+  summarize(n_hat = sum(n_hat, na.rm = T), 
             lower = sum(boot_ci_low, na.rm = T), 
             upper = sum(boot_ci_upr, na.rm = T)) %>%
+  full_join(
+    section_length %>%
+      select(location, length_km, length_mi)
+  ) %>%
+  mutate(n_hat_km = n_hat/length_km, 
+         lower_km = lower/length_km, 
+         upper_km = upper/length_km, 
+         n_hat_mi = n_hat/length_mi, 
+         lower_mi = lower/length_mi, 
+         upper_mi = upper/length_mi, 
+  ) %>%
   ggplot() +
-  geom_point(aes(x = year, y = mle_nhat), size = 3) +
-  geom_errorbar(aes(x = year, ymin = lower, ymax = upper),
+  geom_point(aes(x = year, y = n_hat_km), size = 3) +
+  geom_errorbar(aes(x = year, ymin = lower_km, ymax = upper_km),
                 linetype = 2, linewidth = 0.5) +#,
-  # linetype = "1", colour = 'black', linewidth = 0.75)) +
-  # geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
-  geom_smooth(aes(x = year, y = mle_nhat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
-  # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+  geom_smooth(aes(x = year, y = n_hat_km), linetype = 1, color = 'black', se = TRUE, level = 0.95, method = 'lm', formula = y~x) +
   facet_rep_grid(location~sp) +
+  # lims(y = c(0, 30000)) +
   xlab('Year') +
-  ylab(expression("Population estimate ("~hat("N")~")")) +
-  # labs(title = expression(hat("N")~ "by 10mm length class")) +
-  # labs(shape = "", linetype = '', point = "") +
-  # scale_y_continuous(labels = label_comma()) +
+  ylab(expression("Population estimate ("~hat("N")~")/km")) +
   theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom',
         legend.title=element_blank(),
@@ -176,12 +235,10 @@ pop_ests_length_class %>%
         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
   )
 
+per_km
 
-
-
-
-
-
+ggsave(paste0("output/images/02_population_estimates_per_km.png"), plot = per_km, 
+       width = 16, height = 9, bg = "white")
 
 
 
