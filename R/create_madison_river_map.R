@@ -11,6 +11,7 @@ require(maps)
 require(viridis)
 
 library(ggspatial)
+library(ggrepel)
 
 theme_set(
   theme_void()
@@ -38,17 +39,6 @@ Montana <- st_read('./data/gis/State_of_Montana__Boundary/State_of_Montana__Boun
 ggplot() + 
   geom_sf(data = Montana, colour = 'darkgray', fill = 'gray') +
   coord_sf(default_crs = sf::st_crs(4326))
-
-### 
-# Rivers shapefile
-rivers <- st_read('./data/gis/hd43p/hd43p.shp')
-
-st_geometry_type(rivers)
-st_crs(rivers)
-st_bbox(rivers)
-
-ggplot() + 
-  geom_sf(data = rivers %>% filter(NAME == 'Madison River'), colour = 'blue')
 
 ###
 # more rivers?
@@ -116,6 +106,20 @@ detail <-
             ),
           colour = 'blue', fill = 'blue'
   ) +
+  geom_label_repel(
+    data = rivers %>%
+            filter(grepl(
+              paste(c('Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
+                    collapse = '|'),
+              NAME)),
+            aes(label = NAME, geometry = geometry),
+    stat = 'sf_coordinates', 
+    min.segment.length = 0, 
+    nudge_x = c(0.2, 0.1, 0.1),
+    nudge_y = c(0, 0.1, 0.15), 
+    colour = 'blue', 
+    size = text_size
+  ) +
   geom_sf(data = st_zm(riv %>% filter(grepl('MADISON RIVER', GNIS_Name, ignore.case = TRUE))),
           colour = 'blue', fill = 'blue') +
   geom_point(data = mt_cities, aes(x = long, y = lat), size = 3) +
@@ -134,8 +138,9 @@ detail <-
   annotation_scale() +
   theme(
     panel.background = element_blank(), 
-    axis.text = element_text(size = 15), 
-    axis.title = element_text(size= 20)
+    axis.text = element_text(size = 20), 
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    axis.title = element_text(size= 30)
     ) +
   geom_rect(data = sampling_locations, aes(xmin = long_down, xmax = long_up, 
                                             ymin = lat_up, ymax = lat_down), 
@@ -156,11 +161,8 @@ detail +
 
 
 ggsave(paste0("output/images/detail_inset_map.png"), 
-       width = 16, height = 9, bg = "white")
+       width = 10, height = 9, bg = "white")
 
-
-
-st_read("https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/NHDH_MT_Shape_20221025.zip")
 
 
 
