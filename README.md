@@ -7,3 +7,7 @@ This started as an analysis in Python but for some things, R really is better (i
 Target journal: North American Journal of Fisheries Management
 
 Files are named "in order" of how I've drafted the manuscript; running `00_helper_functions.R`, then `01_...`, etc, will recreate all the data files and images needed for anyone new to this repository.
+
+## NOTES
+
+* The river hydgrogrphy GIS data for creating the map can be downloaded from https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/. The dataset is large and committing it here is too much.
