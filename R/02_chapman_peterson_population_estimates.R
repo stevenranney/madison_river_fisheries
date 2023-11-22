@@ -137,6 +137,13 @@ for (i in 1:nrow(length_class_mods)){
   print(summary(length_class_mods$mod[[i]]))
 }
 
+for (i in 1:nrow(length_class_mods)){
+  print(c(length_class_mods$sp[[i]], length_class_mods$location[[i]]))
+  
+  print(length_class_mods$mod[[i]])
+}
+
+
 
 ###################################################
 # Function to return N_hat by maximum likelihood
