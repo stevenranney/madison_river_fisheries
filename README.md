@@ -10,4 +10,5 @@ Files are named "in order" of how I've drafted the manuscript; running `00_helpe
 
 ## NOTES
 
+* Special thanks to datawim at https://www.datawim.com/post/inset-map-in-r/ for helping me develop the inset map.
 * The river hydgrogrphy GIS data for creating the map can be downloaded from https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/. The dataset is large and committing it here is too much.
