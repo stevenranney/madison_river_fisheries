@@ -61,6 +61,8 @@ ggplot() +
 # Final map
 text_size = 5
 
+# CREATE THE MAP FOR THE INSET
+
 inset <- 
   ggplot() +
   # geom_polygon(data = montana_map, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
@@ -94,6 +96,7 @@ inset <-
 
 inset
 
+# CREATE THE DETAIL MAP
 detail <- 
   ggplot() +
   # geom_polygon(data = region, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
@@ -135,7 +138,7 @@ detail <-
   xlim(-112, -110.9) +
   ylim(44.5, 45.5) +
   annotation_north_arrow(location = 'topright', style = north_arrow_orienteering()) +
-  annotation_scale() +
+  annotation_scale(height = unit(0.5, 'cm'), text_cex = 1.25) +
   theme(
     panel.background = element_blank(), 
     axis.text = element_text(size = 20), 
@@ -157,8 +160,6 @@ detail
 detail +
   annotation_custom(grob = ggplotGrob(inset), 
                     xmin = -111.5, xmax = -110.85, ymin = 45.0, ymax = 45.4)
-
-
 
 ggsave(paste0("output/images/detail_inset_map.png"), 
        width = 10, height = 9, bg = "white")
