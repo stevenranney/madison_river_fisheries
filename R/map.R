@@ -16,10 +16,6 @@ theme_set(
   theme_void()
 )
 
-montana <- map_data('state', region = c('Montana'))
-
-region <- map_data('state', region = c('Idaho', 'Wyoming'))
-
 mt_cities <- data.frame(city = c('Ennis', 'West Yellowstone', 'Helena', 'Bozeman'), 
                         lat = c(45.3491, 44.6621, 46.5891, 45.6793), 
                         long = c(-111.7319, -111.1041, -112.0391, -111.0373), 
@@ -36,23 +32,12 @@ sampling_locations <- data.frame(
 )
 
 
-# montana_map %>% 
-#   ggplot() +
-#   aes(x = long, y = lat) +
-#   geom_polygon(aes( group = group), fill = 'gray') +
-#   # scale_fill_viridis_d() +
-#   theme_void() +
-#   theme(legend.position = "none") + 
-#   coord_map(projection = 'azequalarea')
-
 ### 
 # Montana shapefile
 Montana <- st_read('./data/gis/State_of_Montana__Boundary/State_of_Montana__Boundary.shp')
 ggplot() + 
-  geom_sf(data = Montana, colour = 'blue') +
+  geom_sf(data = Montana, colour = 'darkgray', fill = 'gray') +
   coord_sf(default_crs = sf::st_crs(4326))
-
-
 
 ### 
 # Rivers shapefile
@@ -65,13 +50,30 @@ st_bbox(rivers)
 ggplot() + 
   geom_sf(data = rivers %>% filter(NAME == 'Madison River'), colour = 'blue')
 
+###
+# more rivers?
+
+riv <- 
+  st_read('./data/gis/nhdhflowline/NHDFlowline.shp') %>%
+  filter(grepl('madison', GNIS_Name, ignore.case = TRUE))
+
+st_geometry_type(riv)
+st_crs(riv)
+st_bbox(riv)
+
+# riv %>% filter(grepl('madison', GNIS_Name, ignore.case = TRUE))
+
+ggplot() + 
+  geom_sf(data = st_zm(riv), colour = 'blue')
+  coord_sf(default_crs = sf::st_crs(4326))
+  
+####### 
+# Final map
+text_size = 5
+
 inset <- 
   ggplot() +
   # geom_polygon(data = montana_map, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
-  geom_point(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat)) +
-  geom_text(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat, label = city),
-            nudge_y = 0.75,
-            hjust = 1) +
   geom_sf(data = rivers %>%
             filter(grepl(
               paste(c('Madison River', 'Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
@@ -81,6 +83,12 @@ inset <-
           colour = 'gray', fill = 'gray'
         ) +
   geom_sf(data = Montana, fill = 'gray') + 
+  geom_point(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat), shape = "*", size = 10, fill = 'black') +
+  geom_text(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat, label = city),
+            nudge_y = 0.75,
+            # hjust = -0.5
+            fontface = 'bold', 
+            size = text_size) +
   coord_sf(default_crs = sf::st_crs(4326)) +
   labs(x = NULL, y = NULL) +
   theme_test() +
@@ -92,7 +100,7 @@ inset <-
         plot.margin = margin(0, 0, 0, 0, 'cm'),
         # panel.background = element_rect(fill = 'wheat')
         ) +
-  geom_rect(aes(xmin = -112, xmax = -111, ymin = 44.5, ymax = 45.5), colour = "red", fill = NA)
+  geom_rect(aes(xmin = -112, xmax = -111, ymin = 44.5, ymax = 45.5), colour = "black", fill = NA)
 
 inset
 
@@ -102,26 +110,32 @@ detail <-
   geom_sf(data = Montana, fill = 'gray') + 
   geom_sf(data = rivers %>%
             filter(grepl(
-              paste(c('Madison River', 'Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
+              paste(c('Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
                     collapse = '|'),
               NAME)
             ),
           colour = 'blue', fill = 'blue'
   ) +
-  geom_point(data = mt_cities, aes(x = long, y = lat)) +
+  geom_sf(data = st_zm(riv %>% filter(grepl('MADISON RIVER', GNIS_Name, ignore.case = TRUE))),
+          colour = 'blue', fill = 'blue') +
+  geom_point(data = mt_cities, aes(x = long, y = lat), size = 3) +
   geom_text(data = mt_cities, aes(x = long, y = lat, label = city), 
             nudge_x = -0.05,
-            hjust = 1) +
+            hjust = 0.95, 
+            fontface = 'bold', 
+            size = text_size) +
   coord_sf(default_crs = sf::st_crs(4326)) +
   labs(x = 'Longitude', y = "Latitude") +
   theme_test() +
   theme(legend.position = "none") +
-  xlim(-112, -110.74) +
+  xlim(-112, -110.9) +
   ylim(44.5, 45.5) +
   annotation_north_arrow(location = 'topright', style = north_arrow_orienteering()) +
   annotation_scale() +
   theme(
-    panel.background = element_blank()
+    panel.background = element_blank(), 
+    axis.text = element_text(size = 15), 
+    axis.title = element_text(size= 20)
     ) +
   geom_rect(data = sampling_locations, aes(xmin = long_down, xmax = long_up, 
                                             ymin = lat_up, ymax = lat_down), 
@@ -129,58 +143,26 @@ detail <-
   geom_text(data = sampling_locations, aes(x = long_up, y = lat_down, label = name), 
             nudge_x = -0.05,
             hjust = 1, 
-            colour = 'red')
+            colour = 'red', 
+            fontface = 'bold', 
+            size = text_size)
 
 detail
 
-print(inset, vp = viewport(x = 0.634, y = 0.675, width = 0.25, height = 0.25))
+detail +
+  annotation_custom(grob = ggplotGrob(inset), 
+                    xmin = -111.5, xmax = -110.85, ymin = 45.0, ymax = 45.4)
+
+
+
+ggsave(paste0("output/images/detail_inset_map.png"), 
+       width = 16, height = 9, bg = "white")
+
+
+
+st_read("https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/NHDH_MT_Shape_20221025.zip")
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-  # lims(y = c(45, 46),
-  #      x = c(111, 112))
-  # coord_sf(
-  #   xlim = c(-112, -111), 
-  #   ylim = c(NA, 49))
-  annotation_north_arrow(location = 'br', style = north_arrow_fancy_orienteering()) +
-  # annotation_scale() + 
-  scalebar(data = YK, location = "bottomright", dist = 4,
-                                dist_unit = "km", transform = TRUE,  model = "WGS84")
-  
-
-### 
-# Cities shapefile
-
-towns <- st_read('./data/gis/tl_2019_30_concity/tl_2019_30_concity.shp')
-ggplot() + 
-  geom_sf(data = towns, colour = 'blue')
-
-roads <- st_read('./data/gis/tl_rd22_30055_roads/tl_rd22_30055_roads.shp')
-
-
-montana_map %>% 
-  ggplot() +
-  geom_polygon(aes(x = long, y = lat, group = group), fill = 'gray') +
-  geom_sf(data = roads, colour = 'blue')
-  
-  
-
-
-
-
-
-
-
-  
 
