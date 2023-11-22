@@ -28,8 +28,8 @@ sampling_locations <- data.frame(
   name = c('Varney', 'Pine Butte'), 
   lat_down = c(45.29483, 44.90004), 
   lat_up = c(45.23264, 44.86503), 
-  long_down = c(-111.7561, -111.5921), 
-  long_up = c(-111.7515, -111.5550)
+  long_down = c(-111.745, -111.5921), 
+  long_up = c(-111.765, -111.5550)
 )
 
 
