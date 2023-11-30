@@ -219,7 +219,7 @@ length_class_mods <-
   est_per_km %>%
   ungroup() %>%
   group_by(location, sp) %>%
-  do(mod = lm(year ~ n_hat_km, data = .))
+  do(mod = lm(n_hat_km ~ year, data = .))
 
 length_class_mods 
 
