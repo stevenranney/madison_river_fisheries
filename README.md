@@ -10,3 +10,7 @@ This began as an analysis in Python but for some things, R really is better (i.e
 
 * Special thanks to datawim at https://www.datawim.com/post/inset-map-in-r/ for helping me develop the inset map.
 * The river hydgrogrphy GIS data for creating the map can be downloaded from https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/. The dataset is large and committing it here is too much.
+
+## Reads
+
+* https://derekogle.com/fishR/examples/oldFishRVignettes/MROpen.pdf
