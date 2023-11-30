@@ -129,7 +129,7 @@ detail <-
         filter(grepl(
           paste0(c('^MADISON RIVER', 'SOUTH FORK MADISON RIVER'), 
                  collapse = "|"), 
-          GNIS_Name, ignore.case = TRUE)),
+          GNIS_Name, ignore.case = TRUE))),
           colour = 'blue', fill = 'blue') +
   geom_point(data = mt_cities, aes(x = long, y = lat), size = 3) +
   geom_text(data = mt_cities, aes(x = long, y = lat, label = city), 
