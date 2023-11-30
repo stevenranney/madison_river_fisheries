@@ -57,7 +57,7 @@ calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
   return(cis)
 }
 
-get_chapman_mle <- function(n1, n2, q){
+get_mle_vals <- function(n1, n2, q){
 
   poss_n <- seq(max(c(n1, n2)), max(c(n1, n2))*1000, by = 1)
 
@@ -79,7 +79,6 @@ get_chapman_mle <- function(n1, n2, q){
     pull(n)
   
   return(list(n_hat = n_hat, lower_ci = min(ci), upper_ci = max(ci)))
-  # return(data.frame(n_hat = n_hat, lower_ci = min(ci), upper_ci = max(ci)))
 }
 
 
@@ -181,21 +180,19 @@ pop_ests_length_class <-
 pop_ests_length_class <- 
   pop_ests_length_class %>%
   # do(cbind(., setNames(
-  #   as.list(get_chapman_mle(.$n1, .$n2, .$fit)), 
+  #   as.list(get_mle_vals(.$n1, .$n2, .$fit)), 
   #   c('mle_nhat', 'mle_lower_ci', 'mle_upper_ci')))) %>%
-  mutate(mle_nhat = get_chapman_mle(n1, n2, fit)$n_hat,
-         mle_lwrci = get_chapman_mle(n1, n2, fit)$lower_ci,
-         mle_uprci = get_chapman_mle(n1, n2, fit)$upper_ci
+  mutate(mle_nhat = get_mle_vals(n1, n2, fit)$n_hat,
+         mle_lwrci = get_mle_vals(n1, n2, fit)$lower_ci,
+         mle_uprci = get_mle_vals(n1, n2, fit)$upper_ci
   )
-
-pop_ests_length_class %>%
-  select(sp, year, location, length_class, n1, n2, obs_prop_caught, n_hat, ci, fit, mle_nhat, mle_lwrci, mle_uprci)
 
 #######################
 # LMs of nhat as a function of year
 
-length_class_mods <- 
+est_per_km <- 
   pop_ests_length_class %>%
+  filter(fit >= 0.01) %>% 
   group_by(year, location, sp) %>%
   mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
          mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
@@ -214,7 +211,12 @@ length_class_mods <-
          n_hat_mi = n_hat/length_mi, 
          lower_mi = lower/length_mi, 
          upper_mi = upper/length_mi, 
-  ) %>%
+  )
+
+
+
+length_class_mods <- 
+  est_per_km %>%
   ungroup() %>%
   group_by(location, sp) %>%
   do(mod = lm(year ~ n_hat_km, data = .))
@@ -234,89 +236,11 @@ for (i in 1:nrow(length_class_mods)){
 }
 
 
-
-###################################################
-# Function to return N_hat by maximum likelihood
-# uses the Nhat from Chapman and the observed catchability 
-# to find MLE of Nhat
-
-get_mle_catchability <- function(n, N){
-  q <- seq(0, 1, 0.01)
-  
-  d <- data.frame(q) %>%
-    mutate(L = dbinom(n, N, q))
-  
-  return(d %>% filter(L == max(L)) %>% pull(q))
-  
-}
-
-get_mle_nhat <- function(n, prop){
-  
-  size <- seq(n, 100*(n+1), by = 1)
-  
-  d <- data.frame(size = size) %>%
-    mutate(L = dbinom(n, size, prop))
-  
-  return(d %>% filter(L == max(L)) %>% pull(size) %>% max())
-}
-
-pop_ests_length_class <- 
-  pop_ests_length_class %>%
-  rowwise() %>%
-  mutate(mle_nhat = get_mle_nhat(m2, m2/n2))
-
-# plot using MLE estimator
-# pop_ests_length_class %>% 
-#   filter(mle_nhat > 0) %>%
-#   group_by(year, location, sp) %>%
-#   summarize(mle_nhat = sum(mle_nhat, na.rm = T), 
-#             lower = sum(boot_ci_low, na.rm = T), 
-#             upper = sum(boot_ci_upr, na.rm = T)) %>%
-#   ggplot() +
-#   geom_point(aes(x = year, y = mle_nhat), size = 3) +
-#   geom_errorbar(aes(x = year, ymin = lower, ymax = upper),
-#                 linetype = 2, linewidth = 0.5) +#,
-#   # linetype = "1", colour = 'black', linewidth = 0.75)) +
-#   # geom_smooth(aes(x = year, y = n_hat), se = FALSE, method = 'loess') +
-#   geom_smooth(aes(x = year, y = mle_nhat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
-#   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
-#   facet_rep_grid(location~sp) +
-#   xlab('Year') +
-#   ylab(expression("Population estimate ("~hat("N")~")")) +
-#   # labs(title = expression(hat("N")~ "by 10mm length class")) +
-#   # labs(shape = "", linetype = '', point = "") +
-#   # scale_y_continuous(labels = label_comma()) +
-#   theme_minimal(base_size = 30) +
-#   theme(legend.position = 'bottom',
-#         legend.title=element_blank(),
-#         panel.grid.minor = element_blank(),
-#         # panel.border = element_rect(colour = "black", fill=NA, size=1)
-#         # panel.border = element_blank(),
-#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
-#   )
+###################
+# plot of population estimates/km
 
 per_km <- 
-  pop_ests_length_class %>%
-  group_by(year, location, sp) %>%
-  mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
-         mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
-         mle_uprci = ifelse(is.infinite(mle_uprci), NA, mle_uprci)
-  ) %>%
-  summarize(n_hat = sum(mle_nhat, na.rm = T), 
-            lower = sum(mle_lwrci, na.rm = T), 
-            upper = sum(mle_uprci, na.rm = T)) %>%
-  full_join(
-    section_length %>%
-      select(location, length_km, length_mi)
-  ) %>%
-  mutate(n_hat_km = n_hat/length_km, 
-         lower_km = lower/length_km, 
-         upper_km = upper/length_km, 
-         n_hat_mi = n_hat/length_mi, 
-         lower_mi = lower/length_mi, 
-         upper_mi = upper/length_mi, 
-  ) %>%
+  est_per_km %>%
   ggplot() +
   geom_point(aes(x = year, y = n_hat_km), size = 3) +
   geom_errorbar(aes(x = year, ymin = lower_km, ymax = upper_km),
@@ -341,61 +265,33 @@ per_km
 ggsave(paste0("output/images/02_population_estimates_per_km.png"), plot = per_km, 
        width = 16, height = 9, bg = "white")
 
+# Length category
 
-
-
-
-# plotted population estimates
-p <- 
-  pop_ests_length_class %>%
-  # filter(n_hat > 0) %>%
-  group_by(year, location, sp) %>%
-  summarize(n_hat = sum(n_hat, na.rm = T), 
-            lower = sum(boot_ci_low, na.rm = T), 
-            upper = sum(boot_ci_upr, na.rm = T)) %>%
-  ggplot() +
-  geom_point(aes(x = year, y = n_hat), size = 3) +
-  geom_errorbar(aes(x = year, ymin = lower, ymax = upper),
-                linetype = 2, linewidth = 0.5) +#,
-  geom_smooth(aes(x = year, y = n_hat), linetype = 1, color = 'black', se = FALSE, method = 'lm', formula = y~x) +
-  facet_rep_grid(location~sp) +
-  lims(y = c(0, 30000)) +
-  xlab('Year') +
-  ylab(expression("Population estimate ("~hat("N")~")")) +
-  theme_minimal(base_size = 30) +
-  theme(legend.position = 'bottom',
-        legend.title=element_blank(),
-        panel.grid.minor = element_blank(),
-        # panel.border = element_rect(colour = "black", fill=NA, size=1)
-        # panel.border = element_blank(),
-        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
-  )
-
-p
-
-ggsave(paste0("output/images/02_population_estimates.png"), plot = p, 
-       width = 16, height = 9, bg = "white")
-
-#### 
-# All river poulation estimates?
-
-# pop_ests_length_class %>%
-#   group_by(year, sp) %>%
-#   summarize(n_hat = sum(n_hat, na.rm = T)/2, 
-#             lower = sum(boot_ci_low, na.rm = T)/2, 
-#             upper = sum(boot_ci_upr, na.rm = T)/2, 
-#             total_river = n_hat * 54, 
-#             lower_ci = lower*54, 
-#             upper_ci = upper*54) %>%
+# plotted population estimates by year, sp, location, length category
+# q <- 
+#   pop_ests_length_class %>%
+#   filter(fit >= 0.01) %>%
+#   group_by(year, location, sp, psd) %>%
+#   mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
+#          mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
+#          mle_uprci = ifelse(is.infinite(mle_uprci), NA, mle_uprci)
+#   ) %>%
+#   summarize(n_hat = sum(mle_nhat, na.rm = T), 
+#             lower = sum(mle_lwrci, na.rm = T), 
+#             upper = sum(mle_uprci, na.rm = T)) %>%
 #   ggplot() +
-#   geom_point(aes(x = year, y = total_river), size = 3) +
-#   geom_errorbar(aes(x = year, ymin = lower_ci, ymax = upper_ci),
-#                 linetype = 2, linewidth = 0.5) +#,
-#   geom_smooth(aes(x = year, y = total_river), linetype = 1, color = 'black', se = TRUE, method = 'lm', formula = y~x) +
-#   facet_rep_grid(~sp) +
+#   aes(colour = psd) +
+#   geom_point(aes(x = year, y = n_hat), size = 3) +
+#   # geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
+#   #               linetype = 2, linewidth = 0.5) +#,
+#   geom_smooth(aes(x = year, y = n_hat, linetype = psd), se = FALSE, method = 'lm', formula = y~x) +
+#   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
+#   facet_rep_grid(location~sp) +
 #   xlab('Year') +
 #   ylab(expression("Population estimate ("~hat("N")~")")) +
+#   # labs(title = expression(hat("N")~ "by 10mm length class")) +
+#   # labs(shape = "", linetype = '', point = "") +
+#   # scale_y_continuous(labels = label_comma()) +
 #   theme_minimal(base_size = 30) +
 #   theme(legend.position = 'bottom',
 #         legend.title=element_blank(),
@@ -405,47 +301,11 @@ ggsave(paste0("output/images/02_population_estimates.png"), plot = p,
 #         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
 #         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
 #   )
-
-
-
-# Length category
-
-# plotted population estimates
-q <- 
-  pop_ests_length_class %>%
-  # filter(sp == 'Brown') %>%
-  filter(n_hat > 0) %>%
-  group_by(year, location, sp, psd) %>%
-  summarize(n_hat = sum(n_hat, na.rm = T), 
-            lower = sum(boot_ci_low, na.rm = T), 
-            upper = sum(boot_ci_upr, na.rm = T)) %>%
-  ggplot() +
-  aes(colour = psd) +
-  geom_point(aes(x = year, y = n_hat), size = 3) +
-  # geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
-  #               linetype = 2, linewidth = 0.5) +#,
-  geom_smooth(aes(x = year, y = n_hat, linetype = psd), se = FALSE, method = 'lm', formula = y~x) +
-  # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
-  facet_rep_grid(location~sp) +
-  xlab('Year') +
-  ylab(expression("Population estimate ("~hat("N")~")")) +
-  # labs(title = expression(hat("N")~ "by 10mm length class")) +
-  # labs(shape = "", linetype = '', point = "") +
-  # scale_y_continuous(labels = label_comma()) +
-  theme_minimal(base_size = 30) +
-  theme(legend.position = 'bottom',
-        legend.title=element_blank(),
-        panel.grid.minor = element_blank(),
-        # panel.border = element_rect(colour = "black", fill=NA, size=1)
-        # panel.border = element_blank(),
-        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
-  )
-
-q
-
-ggsave(paste0("output/images/02_population_estimates_length_cagtegory.png"), plot = q, 
-       width = 16, height = 9, bg = "white")
+# 
+# q
+# 
+# ggsave(paste0("output/images/02_population_estimates_length_cagtegory.png"), plot = q, 
+#        width = 16, height = 9, bg = "white")
 
 ##########################
 # time difference between mark/recapture runs
