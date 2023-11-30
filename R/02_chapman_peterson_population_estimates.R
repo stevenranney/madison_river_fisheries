@@ -57,6 +57,31 @@ calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
   return(cis)
 }
 
+get_chapman_mle <- function(n1, n2, q){
+
+  poss_n <- seq(max(c(n1, n2)), max(c(n1, n2))*1000, by = 1)
+
+  lh <- dbinom(n2, poss_n, q)
+
+  df <- data.frame(n = poss_n, L = lh)
+
+  n_hat <- 
+    df %>%
+    filter(L == max(L)) %>%
+    pull(n) %>%
+    max()
+  
+  ci <-
+    df %>% 
+    mutate(log_l = log(L)) %>%
+    filter(log_l > max(log_l)-3.841) %>%
+    slice(c(1, n())) %>% 
+    pull(n)
+  
+  return(list(n_hat = n_hat, lower_ci = min(ci), upper_ci = max(ci)))
+  # return(data.frame(n_hat = n_hat, lower_ci = min(ci), upper_ci = max(ci)))
+}
+
 
 ########################################################################
 counts <- 
@@ -104,16 +129,81 @@ pop_ests_length_class <-
          boot_ci_upr = calc_chapman_bootstrap_ci(n1, n2, m2)[[2]], 
          psd = ifelse(sp == 'Brown', assign_bnt_psd(length_class), 
                       ifelse(sp == 'Rainbow', assign_rbt_psd(length_class), NA)), 
-         psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T'))
+         psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T')), 
+         obs_prop_caught = m2/n2
   )
 
+########################
+# modeling catchability (anderson 1995)
+# SPline modeling of catchability by 10mm length class by year by population by species
+q_mods <- 
+  pop_ests_length_class %>%
+  arrange(year, sp, location, length_class) %>%
+  # Following removed because there was no sampling at these times/locations/species
+  filter(!is.na(obs_prop_caught)) %>%
+  group_by(year, sp, location) %>%
+  do(model = lm(obs_prop_caught ~ splines::bs(length_class), data = .)) 
+
+# Get unique year, species, location values for predictions
+uniques <- 
+  pop_ests_length_class %>%
+  arrange(year, sp, location, length_class) %>% 
+  filter(!is.na(obs_prop_caught)) %>%
+  select(year, sp, location) %>%
+  unique()
+
+
+# Predict probability of recapture (catchability, q_hat) by 10mm for each year, species, location
+fits <- list()
+
+for (i in 1:nrow(uniques)){
+  
+  fits[[i]] <-
+    data.frame(
+      predict(
+        (q_mods %>% 
+           filter(year == uniques$year[i] &
+                    sp == uniques$sp[i] &
+                    location == uniques$location[i]) %>%
+           pull(model))[[1]],
+        se = TRUE))
+  
+}
+
+# reattach fitted probability of capture values to mark/recap dataset
+pop_ests_length_class <-
+  pop_ests_length_class %>%
+  arrange(year, sp, location, length_class) %>% 
+  filter(!is.na(obs_prop_caught)) %>%
+  bind_cols(bind_rows(fits))
+
+# Calculate MLE n_hat and 95% confidence intervals
+pop_ests_length_class <- 
+  pop_ests_length_class %>%
+  # do(cbind(., setNames(
+  #   as.list(get_chapman_mle(.$n1, .$n2, .$fit)), 
+  #   c('mle_nhat', 'mle_lower_ci', 'mle_upper_ci')))) %>%
+  mutate(mle_nhat = get_chapman_mle(n1, n2, fit)$n_hat,
+         mle_lwrci = get_chapman_mle(n1, n2, fit)$lower_ci,
+         mle_uprci = get_chapman_mle(n1, n2, fit)$upper_ci
+  )
+
+pop_ests_length_class %>%
+  select(sp, year, location, length_class, n1, n2, obs_prop_caught, n_hat, ci, fit, mle_nhat, mle_lwrci, mle_uprci)
+
+#######################
+# LMs of nhat as a function of year
 
 length_class_mods <- 
   pop_ests_length_class %>%
   group_by(year, location, sp) %>%
-  summarize(n_hat = sum(n_hat, na.rm = T), 
-            lower = sum(boot_ci_low, na.rm = T), 
-            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
+         mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
+         mle_uprci = ifelse(is.infinite(mle_uprci), NA, mle_uprci)
+  ) %>%
+  summarize(n_hat = sum(mle_nhat, na.rm = T), 
+            lower = sum(mle_lwrci, na.rm = T), 
+            upper = sum(mle_uprci, na.rm = T)) %>%
   full_join(
     section_length %>%
       select(location, length_km, length_mi)
@@ -209,9 +299,13 @@ pop_ests_length_class <-
 per_km <- 
   pop_ests_length_class %>%
   group_by(year, location, sp) %>%
-  summarize(n_hat = sum(n_hat, na.rm = T), 
-            lower = sum(boot_ci_low, na.rm = T), 
-            upper = sum(boot_ci_upr, na.rm = T)) %>%
+  mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
+         mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
+         mle_uprci = ifelse(is.infinite(mle_uprci), NA, mle_uprci)
+  ) %>%
+  summarize(n_hat = sum(mle_nhat, na.rm = T), 
+            lower = sum(mle_lwrci, na.rm = T), 
+            upper = sum(mle_uprci, na.rm = T)) %>%
   full_join(
     section_length %>%
       select(location, length_km, length_mi)
