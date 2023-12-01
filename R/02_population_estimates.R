@@ -223,6 +223,8 @@ length_class_mods <-
 
 length_class_mods 
 
+saveRDS(length_class_mods, "output/data/length_class_mods.rds")
+
 for (i in 1:nrow(length_class_mods)){
   print(c(length_class_mods$sp[[i]], length_class_mods$location[[i]]))
 
