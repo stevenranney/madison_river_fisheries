@@ -190,6 +190,16 @@ pop_ests_length_class <-
 #######################
 # LMs of nhat as a function of year
 
+# Shows which length classes end up getting removed from consideration
+# Mostly the extreme smalls and largers for both species
+# pop_ests_length_class %>% 
+#   filter(fit <= 0.01) %>% 
+#   select(year, sp, length_class) %>% 
+#   group_by(year, sp, length_class) %>% 
+#   summarize(n()) %>% 
+#   arrange(sp, year, length_class) %>% 
+#   as.data.frame()
+
 est_per_km <- 
   pop_ests_length_class %>%
   filter(fit >= 0.01) %>% 
