@@ -65,15 +65,15 @@ text_size = 5
 
 inset <- 
   ggplot() +
-  geom_polygon(data = montana_map, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
-  geom_sf(data = rivers %>%
-            filter(grepl(
-              paste(c('MADISON RIVER', 'Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
-                    collapse = '|'),
-              NAME)
-            ),
-          colour = 'gray', fill = 'gray'
-  ) +
+  # geom_polygon(data = montana_map, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
+  # geom_sf(data = rivers %>%
+  #           filter(grepl(
+  #             paste(c('MADISON RIVER', 'Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
+  #                   collapse = '|'),
+  #             NAME)
+  #           ),
+  #         colour = 'gray', fill = 'gray'
+  # ) +
   geom_sf(data = Montana, fill = 'gray') + 
   geom_point(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat), shape = "*", size = 10, fill = 'black') +
   geom_text(data = mt_cities %>% filter(city == 'Helena'), aes(x = long, y = lat, label = city),

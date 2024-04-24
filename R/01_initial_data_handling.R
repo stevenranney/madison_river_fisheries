@@ -40,5 +40,8 @@ varney %>%
   mutate(psd = ifelse(species == 'Brown', assign_bnt_psd(Length), 
                       ifelse(species == 'Rainbow', assign_rbt_psd(Length), NA)), 
          psd = factor(psd, levels = c('SS', 'S-Q', 'Q-P', 'P-M', 'M-T', '>T')), 
-         length_class = round_down(Length)) %>%
+         length_class = round_down(Length), 
+         ws = ifelse(species == 'Brown', calculate_bnt_ws(log10(Length)), 
+                     ifelse(species == 'Rainbow', calculate_rbt_ws(log10(Length)), NA)), 
+         wr = 100*(Weight/10^(ws))) %>%
   saveRDS('./data/01_upper_madison.rds')

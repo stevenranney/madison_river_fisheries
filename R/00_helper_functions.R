@@ -23,3 +23,18 @@ round_down <- function(x,to=10)
 {
   to*(x %/% to)
 }
+
+# Calculate Ws
+# a + b*log10(L)
+
+calculate_bnt_ws <- function(data){
+  
+  -4.867+(2.960*data) # Lotic, milewski and brown 1994
+  
+}
+
+calculate_rbt_ws <- function(data){
+  
+  -5.023+(3.024*data) #Lotic, simpkins and hubert 1996
+  
+}
