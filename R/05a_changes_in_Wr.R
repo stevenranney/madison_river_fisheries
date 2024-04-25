@@ -3,6 +3,8 @@
 library(ggplot2) #plotting
 library(dplyr) #code orgnization
 library(scales)
+library(tidyr)
+library(parameters) # fancy handling of model parameters
 
 # For repeatability
 set.seed(256)
@@ -82,13 +84,13 @@ wr_ci %>%
   theme_minimal(base_size = 30) +
   theme(legend.position = 'bottom', 
         panel.grid.minor = element_blank(), 
-        axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-        axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
+        axis.line.x = element_line(linewidth = 0.5, linetype = "solid", colour = "black"),
+        axis.line.y = element_line(linewidth = 0.5, linetype = "solid", colour = "black"),
   )
 
   
 
-
+### Generate a linear model from each group
 lm_mods <- 
   all %>%
   filter(species %in% c("Brown", "Rainbow"), 
@@ -119,14 +121,14 @@ mod_coefs <-
          Length >= 140) %>%
   group_by(location, species, psd) %>%
   group_modify(~(model_parameters(lm(wr ~ Year, data = .x, na.action = na.omit), 
-                 bootstrap = FALSE, iterations = 1000))) %>%
+                 bootstrap = TRUE, iterations = 1000))) %>%
   pivot_wider(id_cols = c(location, species, psd), 
               values_from = c(Coefficient, CI_low, CI_high, p), 
               names_from = Parameter)
 
 lookup = c('2.5%' = c('CI_low_(Intercept)', 'CI_low_Year'), 
            'Estimate' = c('Coefficient_(Intercept)', 'Coefficient_Year'), 
-           '97.5%' = c('CI_high_(Intercept)', 'CI_low_Year'), 
+           '97.5%' = c('CI_high_(Intercept)', 'CI_high_Year'), 
            'P value' = c('p_(Intercept)', 'p_Year'),
            'model p_value' = "p_value")
 
@@ -147,4 +149,5 @@ model_metrics_data_set <-
   rename(all_of(lookup)) %>%
   mutate_if(is.numeric, signif, 4)
 
-model_metrics_data_set
+model_metrics_data_set %>%
+  write.csv("output/05a_changes_in_Wr.csv", row.names = FALSE)
