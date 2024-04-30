@@ -43,6 +43,12 @@ ggplot() +
 ###
 # more rivers?
 
+lakes <- 
+  st_read('./data/gis/hd43p/hd43p.shp') %>%
+  filter(grepl(paste(c('Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
+          collapse = '|'),
+    NAME, ignore.case = TRUE))
+  
 riv <- 
   st_read('./data/gis/nhdhflowline/NHDFlowline.shp') %>%
   filter(grepl('madison', GNIS_Name, ignore.case = TRUE))
@@ -101,7 +107,7 @@ detail <-
   ggplot() +
   # geom_polygon(data = region, aes(x = long, y = lat, group = group), colour = 'darkgray', fill = 'gray') +
   geom_sf(data = Montana, fill = 'gray') + 
-  geom_sf(data = rivers %>%
+  geom_sf(data = lakes %>%
             filter(grepl(
               paste(c('Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
                     collapse = '|'),
@@ -110,7 +116,7 @@ detail <-
           colour = 'blue', fill = 'blue'
   ) +
   geom_label_repel(
-    data = rivers %>%
+    data = lakes %>%
             filter(grepl(
               paste(c('Ennis Lake', 'Quake Lake', 'Hebgen Lake'),
                     collapse = '|'),
