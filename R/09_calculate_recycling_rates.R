@@ -16,7 +16,7 @@ for (i in 1:nrow(length_class_mods)){
   # how far out should we make these predictions
   years <- 7
   
-  # create the dataframe from which to make predcitions
+  # create the dataframe from which to make predictions
   future <- 
     data.frame(location = rep(length_class_mods$location[[i]], years+1), 
                sp = rep(length_class_mods$sp[[i]], years+1), 
@@ -72,9 +72,9 @@ brown_recycling_rate <-
   left_join(
     pred_catch %>%
       select(year, bnt_catch_lwr, bnt_catch_fit, bnt_catch_upr) %>%
-      mutate(catch_lwr = bnt_catch_lwr/86.4, 
-             catch_fit = bnt_catch_fit/86.4, 
-             catch_upr = bnt_catch_upr/86.4) %>%
+      mutate(catch_lwr = bnt_catch_lwr/86.4, #If total predicted catch were spread across all 
+             catch_fit = bnt_catch_fit/86.4, # 86.4 total rkms of the upper Madison, this is by rkm
+             catch_upr = bnt_catch_upr/86.4) %>% # catch
       select(year, catch_lwr, catch_fit, catch_upr) 
 ) %>%
   mutate(re_lower = catch_lwr/fit, 
