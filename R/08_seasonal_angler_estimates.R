@@ -1,8 +1,8 @@
 #
+# Simulates every summer of fishing activity from 2023 through 2040
+#
 
-
-
-library(AnglerCreelSurveySimulation)
+library(AnglerCreelSurveySimulation) # Simulates creel surveys
 library(ggplot2)
 library(dplyr)
 library(tidyr)
