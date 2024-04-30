@@ -1,3 +1,8 @@
+# 
+# Creates a linear model to predict n anglers/year and predicts those anglers
+# through 2040.
+#
+
 
 library(dplyr)
 library(ggplot2)

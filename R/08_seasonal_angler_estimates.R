@@ -1,3 +1,7 @@
+#
+
+
+
 library(AnglerCreelSurveySimulation)
 library(ggplot2)
 library(dplyr)
@@ -5,7 +9,7 @@ library(tidyr)
 
 summer = as.numeric(as.Date('2023-08-31') - as.Date("2023-06-01"))
 season_length = summer # days
-summer_prop = 0.67
+summer_prop = 0.67 # proportion of all upper-river users
 
 # From madison river pressure survey -- upper river proportion of surveys from Skaar == 58%
 # angler_days = 58716 * .58
@@ -15,7 +19,7 @@ angling_est <-
   filter(year >= 2023 & year <= 2030) %>% 
   select(year, fit, lwr, upr) %>% 
   pivot_longer(!year, names_to = 'type', values_to = 'n_anglers') %>%
-  mutate(n_upper_anglers = n_anglers * .67, 
+  mutate(n_upper_anglers = n_anglers * summer_prop, 
          bnt_catch = NA, 
          rbt_catch = NA)
 
@@ -53,57 +57,15 @@ for (i in 1:nrow(angling_est)){
     n_sites = 1, #number of sites sampled, all of upper Madison River
     n_anglers = (angling_est$n_upper_anglers[i]*summer_prop)/summer, # n anglers total upper summer anglers/n days in summer = angler_days per day
     sampling_prob = 1, # likelihood of angler being interviewed/sampled by surveyor, measuring every angler
-    mean_catch_rate = 0.64, # catch rate of trout -- 0.38
+    mean_catch_rate = 0.64, # catch rate of trout -- 0.64
     fishing_day_length = 11, # total length of fishing day
     mean_trip_length = trip_length) # average trip length
   
   angling_est$rbt_catch[i] <- sum(sim$true_catch)
 }
 
-#####
-# Can't quite get this figure to match what I want. A table is probably better anyway
-# p <- 
-#   angling_est %>%
-#   mutate(Brown = bnt_catch * 0.02, 
-#          Rainbow = rbt_catch * 0.08) %>%
-#   select(year, type, bnt_catch, rbt_catch, Brown, Rainbow) %>%
-#   pivot_longer(c(Brown, Rainbow), names_to = 'species', values_to = 'mortality') %>%
-#   ggplot() +
-#   geom_line(
-#     data = . %>% filter(type == 'fit'), 
-#     aes(x = year, y = mortality, linetype = type), 
-#     size = 1) +
-#   geom_ribbon(
-#     data = . %>% pivot_wider(names_from = type, values_from = mortality),
-#     aes(x = year, ymin = lwr, ymax = upr), #, fill = 'band'),
-#     # fill = 'grey',
-#     # alpha = 0.5
-#     ) +
-#   facet_grid(~species, scales = "free") +
-#   xlab("Year") +
-#   ylab('Predicted annual mortality') +
-#   scale_linetype_manual(name = "",
-#                         values = 'solid', 
-#                         labels = "Fit"
-#   ) + 
-#   scale_fill_manual("", values = "grey", labels = 'Prediction interval') +
-#   labs(linetype = '', fill = '') +
-#   # scale_y_continuous(labels = label_comma()) +
-#   theme_minimal(base_size = 30) +
-#   theme(legend.position = 'bottom',
-#         legend.title=element_blank(),
-#         panel.grid.minor = element_blank(),
-#         axis.line.x = element_line(size = 0.5, linetype = "solid", colour = "black"),
-#         axis.line.y = element_line(size = 0.5, linetype = "solid", colour = "black"),
-#   )
-# 
-# p
-# 
-# ggsave(paste0("output/images/08_predicted_annual_mortality.png"), plot = p, 
-#        width = 16, height = 9, bg = "white")
 
-
-
+# Produces table of estimated catch and along with total mortality estimates
 angling_est %>%
   mutate(Brown = bnt_catch * 0.02, 
          Rainbow = rbt_catch * 0.08) %>%
