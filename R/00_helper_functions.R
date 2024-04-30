@@ -1,4 +1,8 @@
-
+###
+# Simple functions that are called during intitial data handling. 
+# 
+# Extracted here to make other code a bit cleaner.
+###
 
 # Assign "trout" length categories
 assign_bnt_psd <- function(data){

@@ -1,3 +1,7 @@
+# Generates predictions of weight-at-length for all quantiles 0.05 through 0.95 for 
+# Rainbot Trout
+# Generates plots of thsese data
+
 
 library(quantreg) 
 library(ggplot2) #plotting

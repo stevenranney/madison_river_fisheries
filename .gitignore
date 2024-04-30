@@ -4,4 +4,4 @@
 .Ruserdata
 
 data/gis/nhdhflowline/
-R/some_figures.R
+R/archive/*

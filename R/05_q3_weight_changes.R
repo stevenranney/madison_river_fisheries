@@ -1,10 +1,11 @@
-
+###
+# q3 weight changes by length category
 # Takeaways:
 # no real changes in Q3 or Q2 weights over the years for either brown or rainbow trout
 
 
 library(ggplot2) #plotting
-library(dplyr) #code orgnization
+library(dplyr) #code orgnization/readability
 library(scales)
 
 # For repeatability

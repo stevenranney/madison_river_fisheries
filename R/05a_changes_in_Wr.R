@@ -1,4 +1,18 @@
-
+###
+# 05a_changes_in_Wr
+# Because an initial reviewer requested it, an analysis of how mean Wr has changed
+# for Brown and Rainbow Trouts on the Madison River since 2003.
+# 
+# Ultimately, there has been a significant decrease in mean Wr for both species
+# at both locations. However, analyses of Wr data are not as robust as analyzing 
+# changes in weight-at-length with Quantile Regression so these data will not be 
+# included unless reviewers demand it.
+#
+# Outputs include:
+#   * some figures
+#   * a table of individual models of Wr by species, location, and length category, 
+#   including B0 and 95% CIs, B1 and 95% CIs, and p-value for overall model fit.
+#   
 
 library(ggplot2) #plotting
 library(dplyr) #code orgnization
@@ -8,7 +22,6 @@ library(parameters) # fancy handling of model parameters
 
 # For repeatability
 set.seed(256)
-
 
 all <- readRDS('./data/01_upper_madison.rds') %>%
   filter(Year < 2023)
@@ -149,5 +162,7 @@ model_metrics_data_set <-
   rename(all_of(lookup)) %>%
   mutate_if(is.numeric, signif, 4)
 
+# outputs a table of individual models of Wr by species, location, and length category, 
+# and includes B0 and 95% CIs, B1 and 95% CIs, and p-value for overall model fit.
 model_metrics_data_set %>%
   write.csv("output/05a_changes_in_Wr.csv", row.names = FALSE)

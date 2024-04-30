@@ -1,6 +1,8 @@
-########################################################################
-# Calculates Chapman modification of Lincoln-Peterson estimator by 10mm length class
-# and length category (Gablehouse 198?)
+###
+# 02_population_estimates
+# Makes to different population estimates, Chapman modificaation of Lincoln Peterson and
+# a maximum likelihood estimator
+
 
 library(dplyr)
 library(ggplot2)
@@ -27,6 +29,9 @@ foo <-
   d %>% 
   filter(Year < 2023)
 
+########################################################################
+# Calculates Chapman modification of Lincoln-Peterson estimator by 10mm length class
+# and length category (Gablehouse 198?)
 
 # Calculates Chapman estimator Nhat
 calc_chapman_nhat <- function(n1, n2, m2){
@@ -57,6 +62,8 @@ calc_chapman_bootstrap_ci <- function(n1, n2, m2, boots = 10000, conf = 0.95){
   return(cis)
 }
 
+###
+# Function to estimate MLE values
 get_mle_vals <- function(n1, n2, q){
 
   poss_n <- seq(max(c(n1, n2)), max(c(n1, n2))*1000, by = 1)
@@ -83,6 +90,7 @@ get_mle_vals <- function(n1, n2, q){
 
 
 ########################################################################
+# Some data handling
 counts <- 
   foo %>%
   filter(species %in% c("Brown", "Rainbow"), 
@@ -120,9 +128,9 @@ pop_ests_length_class <-
   mutate(n1 = ifelse(is.na(n1), 0, n1),
          n2 = ifelse(is.na(n2), 0, n2),
          m2 = ifelse(is.na(m2), 0, m2)) %>%
-  # group_by(sp, year, location, length_class) %>%
   rowwise() %>%
-  mutate(n_hat = calc_chapman_nhat(n1, n2, m2), 
+  # Make some estimates--ended up not using these
+  mutate(n_hat = calc_chapman_nhat(n1, n2, m2),
          ci = 1.96*sqrt(calc_chapman_var(n1, n2, m2)), 
          boot_ci_low = calc_chapman_bootstrap_ci(n1, n2, m2)[[1]], 
          boot_ci_upr = calc_chapman_bootstrap_ci(n1, n2, m2)[[2]], 
@@ -133,8 +141,9 @@ pop_ests_length_class <-
   )
 
 ########################
-# modeling catchability (anderson 1995)
-# SPline modeling of catchability by 10mm length class by year by population by species
+# modeling catchability from Anderson 1995
+# Spline modeling of catchability by 10mm length class by year by population by species
+
 q_mods <- 
   pop_ests_length_class %>%
   arrange(year, sp, location, length_class) %>%
@@ -179,9 +188,7 @@ pop_ests_length_class <-
 # Calculate MLE n_hat and 95% confidence intervals
 pop_ests_length_class <- 
   pop_ests_length_class %>%
-  # do(cbind(., setNames(
-  #   as.list(get_mle_vals(.$n1, .$n2, .$fit)), 
-  #   c('mle_nhat', 'mle_lower_ci', 'mle_upper_ci')))) %>%
+  # below is calculating MLE values  
   mutate(mle_nhat = get_mle_vals(n1, n2, fit)$n_hat,
          mle_lwrci = get_mle_vals(n1, n2, fit)$lower_ci,
          mle_uprci = get_mle_vals(n1, n2, fit)$upper_ci
@@ -285,24 +292,25 @@ per_km
 ggsave(paste0("output/images/02_population_estimates_per_km.png"), plot = per_km, 
        width = 16, height = 9, bg = "white")
 
+###
 # Length category
 
-# plotted population estimates by year, sp, location, length category
-# q <- 
+# plotted population estimates by year, sp, location, AND length category
+# q <-
 #   pop_ests_length_class %>%
 #   filter(fit >= 0.01) %>%
 #   group_by(year, location, sp, psd) %>%
-#   mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat), 
+#   mutate(mle_nhat = ifelse(is.infinite(mle_nhat), NA, mle_nhat),
 #          mle_lwrci = ifelse(is.infinite(mle_lwrci), NA, mle_lwrci),
 #          mle_uprci = ifelse(is.infinite(mle_uprci), NA, mle_uprci)
 #   ) %>%
-#   summarize(n_hat = sum(mle_nhat, na.rm = T), 
-#             lower = sum(mle_lwrci, na.rm = T), 
+#   summarize(n_hat = sum(mle_nhat, na.rm = T),
+#             lower = sum(mle_lwrci, na.rm = T),
 #             upper = sum(mle_uprci, na.rm = T)) %>%
 #   ggplot() +
 #   aes(colour = psd) +
 #   geom_point(aes(x = year, y = n_hat), size = 3) +
-#   # geom_errorbar(aes(x = year, ymin = lower, ymax = upper), 
+#   # geom_errorbar(aes(x = year, ymin = lower, ymax = upper),
 #   #               linetype = 2, linewidth = 0.5) +#,
 #   geom_smooth(aes(x = year, y = n_hat, linetype = psd), se = FALSE, method = 'lm', formula = y~x) +
 #   # geom_smooth(aes(x = year, y = est), method = 'lm', formula = y ~ splines::bs(x), se = FALSE)+#, se = TRUE) +
