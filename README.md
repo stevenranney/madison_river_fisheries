@@ -10,6 +10,8 @@ I have intentionally dropped the files beginning with `03...` and `04...` becaus
 
 Output from analyses files are written to `output/` dir and branced from there.
 
+The `/python` directory is a dead end. Originally, I had considered doing all of these analyses in Python because I like Python, but given I am much more efficient, I switched to `R`. I'm leaving this here for posterity.
+
 If readers have any questions, please feel free to contact me at `Steven.Ranney "at" gmail.com`.
 
 ## NEWS
