@@ -1,3 +1,7 @@
+#
+# Calculates catch by river km and recycling rates, BUT NOT from tagged populations
+#
+
 library(dplyr)
 library(ggplot2)
 library(scales)
@@ -65,7 +69,7 @@ pred_catch <-
   read.csv('output/08_predicted_annual_catch_mortality.csv', header = T)
 
 
-
+# Calculates catch by rkm and recycling rate by species, by location, by year
 brown_recycling_rate <- 
   pop_est_preds %>%
   filter(sp == 'Brown') %>%
