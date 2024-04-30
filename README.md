@@ -6,7 +6,7 @@ This repository contains the code and data that are used in the manuscript title
 
 Users can clone the repo, review the code, and run the analyses contained in the paper and evaluate the output for themselves. `R` code is contained in the logically-named directory `R` and, if conducting all analyses, should be run beginning with sourcing the file labeled `00_helper_functions.R` and proceed from there. Numbered files build on output from the previous files. Raw data (i.e., as downloaded from the MTFWP FishMT site) is located in `./data/raw`. "Handled" data is written to `./data/*.rds`. Data associated with mapping is in `./data/gis`.
 
-I have intentionally dropped the files beginning with `03...` and `04...` because they were no longer useful to the analyses. Notably, `05...` and `05a...` files contain analyses that are NOT included in the manuscript but are preserved here in case reviewers demand their inclusion, though an argument could be made to drop all analyses of *W_r*.
+I have intentionally dropped the files beginning with `03...` and `04...` because they were no longer useful to the analyses. Notably, `05...` and `05a...` files contain analyses that are NOT included in the manuscript but are preserved here in case reviewers demand their inclusion, though an argument could be made to drop all analyses of *W<sub>r</sub>*.
 
 Output from analyses files are written to `output/` dir and branced from there.
 
