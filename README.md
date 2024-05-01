@@ -8,7 +8,7 @@ Users can clone the repo, review the code, and run the analyses contained in the
 
 I have intentionally dropped the files beginning with `03...` and `04...` because they were no longer useful to the analyses. Notably, `05...` and `05a...` files contain analyses that are NOT included in the manuscript but are preserved here in case reviewers demand their inclusion, though an argument could be made to drop all analyses of *W<sub>r</sub>*.
 
-Output from analyses files are written to `output/` dir and branced from there.
+Output from analyses files are written to `output/` dir and branched from there.
 
 The `/python` directory is a dead end. Originally, I had considered doing all of these analyses in Python because I like Python, but given I am much more efficient, I switched to `R`. I'm leaving this here for posterity.
 
