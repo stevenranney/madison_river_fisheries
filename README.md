@@ -20,11 +20,11 @@ If readers have any questions, please feel free to contact me at `Steven.Ranney 
 
 ## NOTES
 
-* Special thanks to datawim at https://www.datawim.com/post/inset-map-in-r/ for helping me develop the inset map.
-* The river hydgrogrphy GIS data for creating the map can be downloaded from https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/. The dataset is large and committing it here is too much.
+* Special thanks to [datawim](https://www.datawim.com/post/inset-map-in-r/) for helping me develop the inset map.
+* The river hydgrogrphy GIS data for creating the map can be downloaded from [here](https://ftpgeoinfo.msl.mt.gov/Data/Spatial/MSDI/Hydrography/). The dataset is large and committing it here is too much.
 * Many, but not all, of the literature sources that are referenced in the manuscript are available in the `/literature` directory.
 
 ## Reads
 
-* https://derekogle.com/fishR/examples/oldFishRVignettes/MROpen.pdf
+* [Some information from D. Ogle that helped with the MLE estimates.](https://derekogle.com/fishR/examples/oldFishRVignettes/MROpen.pdf)
 
