@@ -6,4 +6,5 @@
 data/gis/nhdhflowline/
 R/archive/*
 */archive/*
+output/images/archive/*
 manuscript/ranney_angler_satisfaction_ms.docx
