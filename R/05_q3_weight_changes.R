@@ -13,7 +13,9 @@ set.seed(256)
 
 
 all <- readRDS('./data/01_upper_madison.rds') %>%
-  filter(Year < 2023)
+  filter(Year <= 2023)
+
+all %>% group_by(species, Year) %>% summarize(total = n())
 
 
 growth <- 
