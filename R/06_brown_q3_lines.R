@@ -18,7 +18,7 @@ set.seed(256)
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
 all <- readRDS('./data/01_upper_madison.rds') %>%
-  filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
+  # filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   mutate(Year = as.factor(Year))
 
 
@@ -64,43 +64,7 @@ predict_by_10mm %>%
 # se="xy",R=1000, mofn=5000 is bootstrap of xy-pairs 5000 of n samples 
 # made 1000 times.
 
-all <-
-  all %>%
-  filter(species == 'Brown') %>%
-  filter(Length > 0 & Weight > 0)
-
-# Make the ref data the base level in this estimate of 0.75 quantile.
-all <-
-  all %>%
-  mutate(Year = Year %>% relevel(ref = "2003"))
-
-all_75 <- 
-  all %>% 
-  rq(log10(Weight)~log10(Length) + Year + log10(Length):Year, data = .,
-     contrasts = list(Year="contr.treatment"), tau = 0.75)
-
-all_75_diff <- summary(all_75, se = "boot", bsmethod = "xy", R = 1000, mofn = 5000)
-
-all_75_diff <- 
-  data.frame(all_75_diff$coef) %>%
-  mutate(name = row.names(.)) %>%
-  select(name, Value, Std..Error, t.value, Pr...t..) %>%
-  rename(Estimate = Value, 
-         SE = `Std..Error`,
-         `t value` = t.value, 
-         `p value` = `Pr...t..`)
-
-# Calculate 95% confidence intervals around the estimate of the differences in 
-# slope/int among populationsusing bootstrap estimates of SE.
-resid_df <- nrow(all_75$x) - ncol(all_75$x)
-
-all_75_diff <- 
-  all_75_diff %>%
-  mutate(Lwr95CI = Estimate + SE * qt(0.025,resid_df), 
-         Upr95CI = Estimate + SE * qt(0.975,resid_df)) %>%
-  mutate_if(is.numeric, round, 4) %>%
-  select(name, Lwr95CI, Estimate, Upr95CI, `t value`, `p value`)
-
+all_
 all_75_diff %>%
   write.csv(paste0("output/06_brown_differences_in_slope_int.csv"), 
             row.names = FALSE)
@@ -145,8 +109,8 @@ all_75_slope_int_est %>%
 
 var_new <-
   data.frame(Year = rep(all$Year %>% unique(), 5), 
-             Length = rep(c(75, 190, 265, 340, 420), each = 8), 
-             Weight = rep(NA, 40))
+             Length = rep(c(75, 190, 265, 340, 420), each = 21), 
+             Weight = rep(NA, 105))
 
 #Empty list to store values
 predicted_output <- list()
@@ -154,6 +118,7 @@ predicted_output <- list()
 taus <- seq(0.05, 0.95, by = 0.05)
 
 # The below for loop will takes ~9 minutes to run
+start.time <- Sys.time()
 for(i in 1:length(taus)){
   
   #Create model for each tau
@@ -178,6 +143,11 @@ for(i in 1:length(taus)){
   predicted_output[[i]] <- var_pred_midpoints
   
 }
+end.time <- Sys.time()
+
+time.taken <- end.time - start.time
+time.taken
+
 
 predicted_output <- 
   do.call("rbind", predicted_output) %>%

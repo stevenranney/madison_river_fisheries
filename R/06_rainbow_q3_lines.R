@@ -18,7 +18,7 @@ set.seed(256)
 # Data handling. Read in the reference and state "independent" datasets, manipulate, 
 # and combine
 all <- readRDS('./data/01_upper_madison.rds') %>%
-  filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
+  # filter(Year %in% c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022)) %>%
   mutate(Year = as.factor(Year))
 
 
@@ -145,8 +145,9 @@ all_75_slope_int_est %>%
 
 var_new <-
   data.frame(Year = rep(all$Year %>% unique(), 5), 
-             Length = rep(c(125, 325, 450, 575, 725), each = 8), 
-             Weight = rep(NA, 40))
+             Length = rep(c(125, 325, 450, 575, 725), each = 21), 
+             Weight = rep(NA, 105)) %>%
+  arrange(Year, Length)
 
 #Empty list to store values
 predicted_output <- list()
@@ -194,7 +195,9 @@ predicted_output %>%
 predicted_output <- readRDS(paste0("data/06_rainbow_predicted_weight_at_length.rds"))
 
 ###########################################################
-p <- 
+
+y <- 2022
+# p <- 
   predicted_output %>% 
   rename(weight = fit) %>% 
   mutate(length = paste0("TL = ", Length), 
@@ -205,11 +208,11 @@ p <-
   geom_ribbon(aes(x = tau, ymin = lower, ymax = higher, fill = Year, alpha = 0.05)) +
   facet_wrap(~length, scales = "free_y") +
   labs(x= "Quantile", y = "Weight (g)") +
-  scale_fill_manual(name = "Year", 
-                    labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022), 
+  scale_fill_manual(name = "Year",
+                    labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022),
                     values = alpha(hue_pal()(8), alpha = 0.5)) +
-  scale_linetype_manual(name = "Year", 
-                        labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022), 
+  scale_linetype_manual(name = "Year",
+                        labels = c(2003, 2004, 2007, 2010, 2013, 2016, 2019, 2022),
                         values = c(1,3,4,6, 7, 9, 10, 11)) +
   scale_alpha(guide = "none") +
   scale_y_continuous(labels = comma) +
